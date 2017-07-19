@@ -183,7 +183,7 @@ EOF
     postconf -e smtpd_recipient_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
   fi
 
-  if [ ! -z ${POSTFIX_SSL_IN_SECURITY_LEVEL+x} ] || [ -f /etc/postfix/tls/relay_clientcerts ] ; then
+  if [ ! -z ${POSTFIX_SSL_IN_SECURITY_LEVEL+x} ] || [ -f /etc/postfix/tls/relay_clientcerts ]; then
     echo ">> POSTFIX SSL - enabling Fingerprint based Client Authentication"
     echo "$POSTFIX_SSL_IN_SECURITY_LEVEL" >> /etc/postfix/tls/relay_clientcerts
     postmap /etc/postfix/tls/relay_clientcerts
@@ -192,6 +192,16 @@ EOF
     postconf -e smtpd_recipient_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
   fi
 
+  if [ ! -z ${POSTFIX_QUEUE_LIFETIME_BOUNCE+x} ]; then
+    echo ">> POSTFIX set bounce_queue_lifetime = $POSTFIX_QUEUE_LIFETIME_BOUNCE"
+    postconf -e "bounce_queue_lifetime=$POSTFIX_QUEUE_LIFETIME_BOUNCE"
+  fi
+
+  if [ ! -z ${POSTFIX_QUEUE_LIFETIME_MAX+x} ]; then
+    echo ">> POSTFIX set maximal_queue_lifetime = $POSTFIX_QUEUE_LIFETIME_MAX"
+    postconf -e "maximal_queue_lifetime=$POSTFIX_QUEUE_LIFETIME_MAX"
+  fi
+  
   echo ">> RUNIT - create services"
   mkdir -p /etc/sv/postfix /etc/sv/amavis /etc/sv/clamd /etc/sv/freshclam
   echo -e '#!/bin/sh\nexec /usr/sbin/amavisd-new foreground' > /etc/sv/amavis/run
