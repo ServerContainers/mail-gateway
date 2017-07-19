@@ -1,0 +1,20 @@
+version: '3.3'
+
+services:
+
+  mail-gateway:
+    build:
+      context: .
+    image: servercontainers/mail-gateway
+    restart: always
+    environment:
+      MAIL_FQDN: mail-security-scanner-gateway
+      RELAYHOST: mail02.internal.tld:25
+    volumes:
+      - ./tls:/etc/postfix/tls:ro
+    networks:
+      - mail
+
+networks:
+  mail:
+    driver: bridge
