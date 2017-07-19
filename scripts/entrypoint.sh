@@ -185,7 +185,9 @@ EOF
 
   if [ ! -z ${POSTFIX_SSL_IN_SECURITY_LEVEL+x} ] || [ -f /etc/postfix/tls/relay_clientcerts ]; then
     echo ">> POSTFIX SSL - enabling Fingerprint based Client Authentication"
-    echo "$POSTFIX_SSL_IN_SECURITY_LEVEL" >> /etc/postfix/tls/relay_clientcerts
+    if [ ! -z ${POSTFIX_SSL_IN_SECURITY_LEVEL+x} ]; then
+      echo "$POSTFIX_SSL_IN_SECURITY_LEVEL" >> /etc/postfix/tls/relay_clientcerts
+    fi
     postmap /etc/postfix/tls/relay_clientcerts
     postconf -e smtpd_tls_ask_ccert=yes
     postconf -e relay_clientcerts=hash:/etc/postfix/tls/relay_clientcerts
