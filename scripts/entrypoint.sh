@@ -3,10 +3,16 @@
 # can be done on every start...
 if [ -z ${RELAYHOST+x} ]; then
   echo ">> don't allow all networks to send mails - to avoid open relay"
+  echo ">> update mynetworks to: 127.0.0.1/8"
   postconf -e 'mynetworks=127.0.0.1/8'
 else
   echo ">> update mynetworks with available networks"
   postconf -e 'mynetworks='$(list-available-networks.sh | tr '\n' ',' | sed 's/,$//g')
+fi
+
+if [ ! -z ${MYNETWORKS+x} ]; then
+  echo ">> update mynetworks to: $MYNETWORKS"
+  postconf -e "mynetworks=$MYNETWORKS"
 fi
 
 # only on container creation
@@ -203,7 +209,18 @@ EOF
     echo ">> POSTFIX set maximal_queue_lifetime = $POSTFIX_QUEUE_LIFETIME_MAX"
     postconf -e "maximal_queue_lifetime=$POSTFIX_QUEUE_LIFETIME_MAX"
   fi
-  
+
+  if [ ! -z ${POSTFIX_RELAY_DOMAINS+x} ]; then
+    echo ">> POSTFIX set relay_domains = $POSTFIX_RELAY_DOMAINS"
+    postconf -e "relay_domains=$POSTFIX_RELAY_DOMAINS"
+  fi
+
+  if [ -f /etc/postfix/additional/transport ]; then
+    echo ">> POSTFIX found 'additional/transport' activating it as transport_maps"
+    postmap /etc/postfix/additional/transport
+    postconf -e "transport_maps = hash:/etc/postfix/additional/transport"
+  fi
+
   echo ">> RUNIT - create services"
   mkdir -p /etc/sv/postfix /etc/sv/amavis /etc/sv/clamd /etc/sv/freshclam
   echo -e '#!/bin/sh\nexec /usr/sbin/amavisd-new foreground' > /etc/sv/amavis/run

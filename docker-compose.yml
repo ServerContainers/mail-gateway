@@ -12,6 +12,7 @@ services:
       RELAYHOST: mail02.internal.tld:25
     volumes:
       - ./tls:/etc/postfix/tls:ro
+      - ./additional:/etc/postfix/additional
     networks:
       - mail
 
