@@ -20,6 +20,9 @@ INITIALIZED="/.initialized"
 if [ ! -f "$INITIALIZED" ]; then
 	touch "$INITIALIZED"
 
+  ">> cleaning old unused tls settings"
+  sed -i 's/^smtp.*_tls_.*//g' /etc/postfix/main.cf
+
 	if [ -z ${RELAYHOST+x} ]; then
     echo ">> it is advised to set a relayhost to avoid open relays..."
   else
@@ -48,7 +51,7 @@ if [ ! -f "$INITIALIZED" ]; then
   if [ -z ${DISABLE_AMAVIS+x} ]; then
     echo ">> AMAVIS - enabling spam/virus scanning"
 
-cat <<EOF >> /etc/postfix/master.cf
+cat <<EOF >> /etc/postfix/main.cf
 #ContentFilter:
 content_filter = smtp-amavis:[127.0.0.1]:10024
 receive_override_options = no_address_mappings
