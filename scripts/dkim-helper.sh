@@ -10,6 +10,8 @@ touch /etc/postfix/additional/opendkim/KeyTable \
 
 cat <<EOF >> /etc/opendkim.conf
 
+Mode			              sv
+
 LogWhy                  yes
 
 KeyTable                /etc/postfix/additional/opendkim/KeyTable
