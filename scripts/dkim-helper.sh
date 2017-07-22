@@ -35,7 +35,7 @@ for domain in $(echo $DKIM_DOMAINS); do
 
   keydir="/etc/postfix/additional/opendkim/keys/$domain"
   if [ ! -d "$keydir" ]; then
-    mkdir $keydir
+    mkdir -p $keydir
   fi
   cd $keydir
 
