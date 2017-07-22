@@ -48,13 +48,13 @@ if [ ! -f "$INITIALIZED" ]; then
   if [ -z ${DISABLE_AMAVIS+x} ]; then
     echo ">> AMAVIS - enabling spam/virus scanning"
 
-cat <<EOF >> /etc/postfix/main.cf
+cat <<EOF >> /etc/postfix/master.cf
 #ContentFilter:
 content_filter = smtp-amavis:[127.0.0.1]:10024
 receive_override_options = no_address_mappings
 EOF
 
-cat <<EOF >> /etc/postfix/main.cf
+cat <<EOF >> /etc/postfix/master.cf
 smtp-amavis  unix    -    -    n    -    2    smtp
  -o smtp_data_done_timeout=1200
  -o smtp_send_xforward_command=yes
