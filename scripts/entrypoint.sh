@@ -213,6 +213,11 @@ EOF
     postconf -e "maximal_queue_lifetime=$POSTFIX_QUEUE_LIFETIME_MAX"
   fi
 
+  if [ ! -z ${POSTFIX_MYDESTINATION+x} ]; then
+    echo ">> POSTFIX set mydestination = $POSTFIX_MYDESTINATION"
+    postconf -e "mydestination=$POSTFIX_MYDESTINATION"
+  fi
+
   if [ ! -z ${POSTFIX_RELAY_DOMAINS+x} ]; then
     echo ">> POSTFIX set relay_domains = $POSTFIX_RELAY_DOMAINS"
     postconf -e "relay_domains=$POSTFIX_RELAY_DOMAINS"
