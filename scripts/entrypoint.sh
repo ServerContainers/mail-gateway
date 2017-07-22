@@ -189,10 +189,10 @@ EOF
     postconf -e smtpd_recipient_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
   fi
 
-  if [ ! -z ${POSTFIX_SSL_IN_SECURITY_LEVEL+x} ] || [ -f /etc/postfix/tls/relay_clientcerts ]; then
+  if [ ! -z ${POSTFIX_SSL_IN_CERT_FINGERPRINTS+x} ] || [ -f /etc/postfix/tls/relay_clientcerts ]; then
     echo ">> POSTFIX SSL - enabling Fingerprint based Client Authentication"
-    if [ ! -z ${POSTFIX_SSL_IN_SECURITY_LEVEL+x} ]; then
-      echo "$POSTFIX_SSL_IN_SECURITY_LEVEL" >> /etc/postfix/tls/relay_clientcerts
+    if [ ! -z ${POSTFIX_SSL_IN_CERT_FINGERPRINTS+x} ]; then
+      echo "$POSTFIX_SSL_IN_CERT_FINGERPRINTS" >> /etc/postfix/tls/relay_clientcerts
     fi
     postmap /etc/postfix/tls/relay_clientcerts
     postconf -e smtpd_tls_ask_ccert=yes
@@ -213,6 +213,11 @@ EOF
   if [ ! -z ${POSTFIX_RELAY_DOMAINS+x} ]; then
     echo ">> POSTFIX set relay_domains = $POSTFIX_RELAY_DOMAINS"
     postconf -e "relay_domains=$POSTFIX_RELAY_DOMAINS"
+  fi
+
+  if [ ! -z ${POSTFIX_SMTPD_BANNER+x} ]; then
+    echo ">> POSTFIX set smtpd_banner = $POSTFIX_SMTPD_BANNER"
+    postconf -e "smtpd_banner=$POSTFIX_SMTPD_BANNER"
   fi
 
   if [ -f /etc/postfix/additional/transport ]; then

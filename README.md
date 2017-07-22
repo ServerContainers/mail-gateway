@@ -1,3 +1,8 @@
+# servercontainers/mail-gateway
+
+## Environment variables
+
+- POSTFIX_SMTPD_BANNER
 
 # Cheat Sheet
 
