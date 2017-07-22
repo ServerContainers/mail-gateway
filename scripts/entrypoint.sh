@@ -228,6 +228,11 @@ EOF
     postconf -e "smtpd_banner=$POSTFIX_SMTPD_BANNER"
   fi
 
+  if [ -d /etc/postfix/additional/opendkim ]; then
+    echo ">> enabling DKIM"
+    dkim-helper.sh
+  fi
+
   if [ -f /etc/postfix/additional/transport ]; then
     echo ">> POSTFIX found 'additional/transport' activating it as transport_maps"
     postmap /etc/postfix/additional/transport
@@ -235,11 +240,12 @@ EOF
   fi
 
   echo ">> RUNIT - create services"
-  mkdir -p /etc/sv/rsyslog /etc/sv/postfix /etc/sv/amavis /etc/sv/clamd /etc/sv/freshclam
+  mkdir -p /etc/sv/rsyslog /etc/sv/postfix /etc/sv/opendkim /etc/sv/amavis /etc/sv/clamd /etc/sv/freshclam
   echo -e '#!/bin/sh\nexec /usr/sbin/rsyslogd -n' > /etc/sv/rsyslog/run
     echo -e '#!/bin/sh\nrm /var/run/rsyslogd.pid' > /etc/sv/rsyslog/finish
+  echo -e '#!/bin/sh\nexec  /usr/sbin/opendkim -f -x /etc/opendkim.conf -u opendkim -P /var/run/opendkim/opendkim.pid -p local:/var/run/opendkim/opendkim.sock' > /etc/sv/opendkim/run
   echo -e '#!/bin/sh\nexec /usr/sbin/amavisd-new foreground' > /etc/sv/amavis/run
-  echo -e '#!/bin/sh\nservice postfix start; while ps aux | grep [p]ostfix | grep [m]aster > /dev/null 2> /dev/null; do sleep 5; done' > /etc/sv/postfix/run
+  echo -e '#!/bin/sh\nservice postfix start; sleep 5; while ps aux | grep [p]ostfix | grep [m]aster > /dev/null 2> /dev/null; do sleep 5; done' > /etc/sv/postfix/run
     echo -e '#!/bin/sh\nservice postfix stop' > /etc/sv/postfix/finish
   echo -e '#!/bin/sh\nexec /usr/sbin/clamd --foreground=true' > /etc/sv/clamd/run
   echo -e '#!/bin/sh\nexec freshclam -d --foreground=true' > /etc/sv/freshclam/run
@@ -248,8 +254,14 @@ EOF
   echo ">> RUNIT - enable services"
   ln -s /etc/sv/postfix /etc/service/postfix
   ln -s /etc/sv/rsyslog /etc/service/rsyslog
+
+  if [ -d /etc/postfix/additional/opendkim ]; then
+    ln -s /etc/sv/opendkim /etc/service/opendkim
+  fi
+
   if [ -z ${DISABLE_AMAVIS+x} ]; then
     ln -s /etc/sv/amavis /etc/service/amavis
+
     if [ -z ${DISABLE_VIRUS_CHECKS+x} ]; then
       ln -s /etc/sv/clamd /etc/service/clamd
       ln -s /etc/sv/freshclam /etc/service/freshclam
