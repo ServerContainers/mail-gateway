@@ -11,6 +11,7 @@ touch /etc/postfix/additional/opendkim/KeyTable \
 cat <<EOF >> /etc/opendkim.conf
 
 Mode			              sv
+SubDomains              yes
 
 LogWhy                  yes
 
