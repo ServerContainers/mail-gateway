@@ -20,7 +20,7 @@ INITIALIZED="/.initialized"
 if [ ! -f "$INITIALIZED" ]; then
 	touch "$INITIALIZED"
 
-  ">> cleaning old unused tls settings"
+  echo ">> cleaning old unused tls settings"
   sed -i 's/^smtp.*_tls_.*//g' /etc/postfix/main.cf
 
 	if [ -z ${RELAYHOST+x} ]; then
