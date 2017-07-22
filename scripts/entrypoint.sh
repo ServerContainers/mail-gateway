@@ -129,7 +129,7 @@ EOF
   fi
 
   if [[ -f "$POSTFIX_SSL_OUT_CERT" && -f "$POSTFIX_SSL_OUT_KEY" ]]; then
-    echo ">> POSTFIX SSL - enabling incoming SSL"
+    echo ">> POSTFIX SSL - enabling outgoing SSL"
 cat <<EOF >> /etc/postfix/main.cf
 ##### TLS settings ######
 
