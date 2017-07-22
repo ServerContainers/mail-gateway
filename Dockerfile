@@ -6,10 +6,15 @@ RUN apt-get -q -y update \
  && apt-get -q -y install runit \
                           telnet \
                           postfix \
+                          rsyslog \
                           clamav clamav-daemon amavisd-new spamassassin razor pyzor \
                           arj bzip2 cabextract cpio file gzip nomarch pax unzip zoo zip zoo \
  && apt-get -q -y clean \
  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+ \
+ && head -n $(grep -n RULES /etc/rsyslog.conf | cut -d':' -f1) /etc/rsyslog.conf > /etc/rsyslog.conf.new \
+ && mv /etc/rsyslog.conf.new /etc/rsyslog.conf \
+ && echo 'mail.*        /dev/stdout' >> /etc/rsyslog.conf \
  \
  && adduser clamav amavis
 
