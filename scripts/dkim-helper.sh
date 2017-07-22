@@ -4,8 +4,6 @@ echo ">> DKIM - Domains ($DKIM_DOMAINS)"
 
 echo ">> DKIM - updating opendkim config"
 
-echo 'SOCKET="inet:8891@localhost"' >> /etc/default/opendkim
-
 touch /etc/postfix/additional/opendkim/KeyTable \
       /etc/postfix/additional/opendkim/SigningTable \
       /etc/postfix/additional/opendkim/TrustedHosts
@@ -13,7 +11,6 @@ touch /etc/postfix/additional/opendkim/KeyTable \
 cat <<EOF >> /etc/opendkim.conf
 
 LogWhy                  yes
-Socket                  inet:8891@localhost
 
 KeyTable                /etc/postfix/additional/opendkim/KeyTable
 SigningTable            /etc/postfix/additional/opendkim/SigningTable
