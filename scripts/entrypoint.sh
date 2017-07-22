@@ -117,11 +117,11 @@ EOF
   # FIXME: configure postfix, cache time for mail relaing etc.
 
   if [ -z ${POSTFIX_SSL_OUT_CERT+x} ]; then
-    POSTFIX_SSL_OUT_CERT="/etc/postfix/tls/bundle.crt"
+    POSTFIX_SSL_OUT_CERT="/etc/postfix/tls/client.crt"
   fi
 
   if [ -z ${POSTFIX_SSL_OUT_KEY+x} ]; then
-    POSTFIX_SSL_OUT_KEY="/etc/postfix/tls/cert.key"
+    POSTFIX_SSL_OUT_KEY="/etc/postfix/tls/client.key"
   fi
 
   if [ -z ${POSTFIX_SSL_OUT_SECURITY_LEVEL+x} ]; then
