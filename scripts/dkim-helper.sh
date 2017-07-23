@@ -8,6 +8,9 @@ touch /etc/postfix/additional/opendkim/KeyTable \
       /etc/postfix/additional/opendkim/SigningTable \
       /etc/postfix/additional/opendkim/TrustedHosts
 
+echo ">> DKIM - trust all hosts (0.0.0.0/0)"
+echo "0.0.0.0/0" > /etc/postfix/additional/opendkim/TrustedHosts
+
 cat <<EOF >> /etc/opendkim.conf
 
 Mode			              sv
@@ -17,7 +20,6 @@ LogWhy                  yes
 
 KeyTable                /etc/postfix/additional/opendkim/KeyTable
 SigningTable            /etc/postfix/additional/opendkim/SigningTable
-ExternalIgnoreList      /etc/postfix/additional/opendkim/TrustedHosts
 InternalHosts           /etc/postfix/additional/opendkim/TrustedHosts
 EOF
 
@@ -47,7 +49,6 @@ for domain in $(echo $DKIM_DOMAINS); do
 
     echo "default._domainkey.$domain $domain:default:$keydir/default.private" >> /etc/postfix/additional/opendkim/KeyTable
     echo "$domain default._domainkey.$domain" >> /etc/postfix/additional/opendkim/SigningTable
-    echo "$domain" >> /etc/postfix/additional/opendkim/TrustedHosts
     echo ">> key for domain $domain created"
   else
     echo ">> key for domain $domain exists already"
