@@ -1,13 +1,17 @@
 #!/bin/bash
 
 # can be done on every start...
-if [ -z ${RELAYHOST+x} ]; then
-  echo ">> don't allow all networks to send mails - to avoid open relay"
-  echo ">> update mynetworks to: 127.0.0.0/8"
-  postconf -e 'mynetworks=127.0.0.0/8'
-else
-  echo ">> update mynetworks with available networks"
-  postconf -e 'mynetworks='$(list-available-networks.sh | tr '\n' ',' | sed 's/,$//g')
+AVAILABLE_NETWORKS="127.0.0.0/8"
+if [ ! -z ${AUTO_TRUST_NETWORKS+x} ]; then
+  AVAILABLE_NETWORKS=$(list-available-networks.sh | tr '\n' ',' | sed 's/,$//g')
+  echo ">> trust all available networks: $AVAILABLE_NETWORKS"
+fi
+
+postconf -e "mynetworks=$AVAILABLE_NETWORKS"
+
+if [ ! -z ${ADDITIONAL_MYNETWORKS+x} ]; then
+  echo ">> update mynetworks to: $AVAILABLE_NETWORKS,$ADDITIONAL_MYNETWORKS"
+  postconf -e "mynetworks=$AVAILABLE_NETWORKS,$ADDITIONAL_MYNETWORKS"
 fi
 
 if [ ! -z ${MYNETWORKS+x} ]; then

@@ -17,7 +17,7 @@ RUN apt-get -q -y update \
  \
  && head -n $(grep -n RULES /etc/rsyslog.conf | cut -d':' -f1) /etc/rsyslog.conf > /etc/rsyslog.conf.new \
  && mv /etc/rsyslog.conf.new /etc/rsyslog.conf \
- && echo 'mail.*        /dev/stdout' >> /etc/rsyslog.conf \
+ && echo '*        /dev/stdout' >> /etc/rsyslog.conf \
  \
  && adduser clamav amavis
 

@@ -1,4 +1,38 @@
-# servercontainers/mail-gateway
+# Docker Mail Gateway Postfix (servercontainers/mail-gateway)
+_maintained by ServerContainers_
+
+[FAQ - All you need to know about the servercontainers Containers](https://marvin.im/docker-faq-all-you-need-to-know-about-the-marvambass-containers/)
+
+## What is it
+
+This Dockerfile (available as ___servercontainers/mail-gateway___) gives you a Postfix Configured for the following scenarios.
+
+- Smarthost Configuration (Outgoing Mails for trusted nodes with random IP)
+    - _let your internal mailserver send mails through this container encrypted and authenticated via ssl client authentication_
+- Incoming Mail Spamfilter/Virusscanner (Amavis) Gateway
+    - _you can also put this container in front of your mailbox handling server and let this container do the spam/virus checks_
+- Incoming Mail Gateway
+    - _let this gateway do caching and loadbalancing_
+- Outgoing Mail Gateway and DKIM signer
+    - _sign your mails even for multiple domains with DKIM automatically_
+- Outgoing Mail Gateway for Docker Containers connected to this container via networks
+    - _this container is capable of automatically trusting all networks it's connected to_
+- Outgoing Mail for specified Networks
+    - _trust specified Networks_
+
+For Configuration of the Server you use environment Variables and volume files.
+
+It's based on the [debian:jessie](https://registry.hub.docker.com/_/debian:jessie/) Image
+
+View in Docker Registry [servercontainers/mail-gateway](https://registry.hub.docker.com/u/servercontainers/mail-gateway/)
+
+View in GitHub [ServerContainers/mail-gateway](https://github.com/ServerContainers/mail-gateway)
+
+### What it's not
+
+This container is not meant to be used as a mail server which stores mails and handles mailboxes.
+Just put this container in between the outside world and your mailbox handeling mail server.
+
 
 ## Environment variables
 
