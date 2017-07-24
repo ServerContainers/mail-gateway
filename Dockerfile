@@ -59,6 +59,6 @@ RUN postconf -e 'mydestination=localhost, localhost.localdomain, localhost' \
 
 COPY scripts /usr/local/bin
 
-VOLUME ["/etc/postfix/tls"]
+VOLUME ["/etc/postfix/tls", "/etc/postfix/additional"]
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

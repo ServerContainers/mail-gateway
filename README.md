@@ -4,7 +4,82 @@
 
 - POSTFIX_SMTPD_BANNER
 
+## Volumes
+
+- /etc/postfix/tls
+    - this is where the container looks for:
+        - dh1024.pem (to overwrite the one generated at container build)
+        - dh512.pem (to overwrite the one generated at container build)
+        - rootCA.crt (to check valid client certificates against)
+        - client.crt (outgoing SSL Client cert)
+        - client.key (outgoing SSL Client key)
+        - bundle.crt (incoming SSL Server cert/bundle)
+        - cert.key (incoming SSL Server key)
+- /etc/postfix/additional
+    - this is where the container looks for:
+        - opendkim (folder - enables opendkim support if it exists - but needs __DKIM\_DOMAINS__ env)
+        - transport (postfix transport text-file - without been postmaped)
+
 # Cheat Sheet
+
+## DKIM
+
+This Server enables you to use DKIM for multiple Domains by default.
+
+To use it just add your domains to the __DKIM\_DOMAINS__ environment variable.
+_DKIM\_DOMAINS: example.com myotherdomain.tld_
+
+and make sure the folder _/etc/postfix/additional/opendkim_ is available from within the container (/etc/postfix/additional is a volume).
+
+After that the DKIM Keys will be generated automatically if necessary.
+All DKIM Public Informations for your DNS Servers will be printed to the Docker Logs.
+
+So you start the container wait for the Public Keys to appear in the Docker logs and add them to the Domains in your DNS System.
+
+### DKIM manually (for a single Domain)
+
+_You don't need the next steps, but they are great to understand how DKIM works_
+
+_If you want to know how the multi domain handeling is done just take a look at the containers github repository_
+
+To generate DKIM keys you'll need the opendkim tools
+
+```
+$ apt-get install opendkim-tools
+```
+
+This generates a new certificate for `@example.com` with selector `-s mail`. If you want to Test DKIM first, add `-t` argument which stands for test-mode.
+
+```
+$ opendkim-genkey -s mail -d example.com
+```
+
+Just put the file _mail.private_ as _dkim.key_ inside the dkim directory you'll later link into the container using _-v_.
+
+The `mail.txt` should be imported into the DNS System. Add a new _TXT-Record_ for _mail_.\_domainkey [selector.\_domainkey]. And add as value the String starting "`v=DKIM1;...`" from the `mail.txt` file.
+
+Example:
+
+```
+$ cat mail.txt
+mail._domainkey	IN	TXT	( "v=DKIM1; k=rsa; "
+	  "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDcUp8Q1sbxgnR2iL7w+TOHN1IR6PzAP3vmUoPfeN07NGfWo8Wzxyn+hqqnC+mbPOW4ZDoAiu5dvpPsCt1RQalwBw/iPlB/8ScTlPGRpsTLo4ruCDL+yVkw32/UhvCL8vbZxM/Q7ELjO6AqRRW/KuCvbd5gNRYGeyjWd+UQAfmBJQIDAQAB" )  ; ----- DKIM key mail for example.com
+```
+
+You need to put this line in your `example.com` DNS config zone:
+
+```
+mail._domainkey	IN	TXT	"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDcUp8Q1sbxgnR2iL7w+TOHN1IR6PzAP3vmUoPfeN07NGfWo8Wzxyn+hqqnC+mbPOW4ZDoAiu5dvpPsCt1RQalwBw/iPlB/8ScTlPGRpsTLo4ruCDL+yVkw32/UhvCL8vbZxM/Q7ELjO6AqRRW/KuCvbd5gNRYGeyjWd+UQAfmBJQIDAQAB"
+```
+
+Thats all you need for DKIM
+
+Check DNS config:
+
+```
+$ host -t TXT mail._domainkey.example.com
+mail._domainkey.example.com descriptive text "v=DKIM1\; k=rsa\; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDcUp8Q1sbxgnR2iL7w+TOHN1IR6PzAP3vmUoPfeN07NGfWo8Wzxyn+hqqnC+mbPOW4ZDoAiu5dvpPsCt1RQalwBw/iPlB/8ScTlPGRpsTLo4ruCDL+yVkw32/UhvCL8vbZxM/Q7ELjO6AqRRW/KuCvbd5gNRYGeyjWd+UQAfmBJQIDAQAB"
+```
 
 ## Create a self-signed ssl cert
 
