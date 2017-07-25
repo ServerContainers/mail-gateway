@@ -33,10 +33,58 @@ View in GitHub [ServerContainers/mail-gateway](https://github.com/ServerContaine
 This container is not meant to be used as a mail server which stores mails and handles mailboxes.
 Just put this container in between the outside world and your mailbox handeling mail server.
 
-
 ## Environment variables
 
+__OFFICIAL ENVIRONMENT VARIABLES__
+
+- MAIL_FQDN
+    - specify the mailserver name - only add FQDN not a hostname!
+    - e.g. _my.mailserver.example.com_
 - POSTFIX_SMTPD_BANNER
+    - alter the SMTPD Banner of postfix e.g. _mailserver.example.local ESMTP_
+
+- AUTO_TRUST_NETWORKS
+    - add all networks this container is connected to and trust them to send mails
+    - _set to any value to enable_
+- ADDITIONAL_MYNETWORKS
+    - add this specific network to the automatically trusted onces
+- MYNETWORKS
+    - ignore all auto configured _mynetworks_ and replace them with this value
+    - _overwrites networks specified in ADDITIONAL_MYNETWORKS_
+
+- RELAYHOST
+    - sets postfix relayhost - please take a look at the official documentation
+    - _The form enclosed with [] eliminates DNS MX lookups. Don't worry if you don't know what that means. Just be sure to specify the [] around the mailhub hostname that your ISP gave to you, otherwise mail may be mis-delivered._
+
+- DISABLE_AMAVIS
+    - disable spam and virus checks (also disables the services so only postfix and needed services get started)
+    - might be useful if you only get trusted e-mails
+    - _set to any value to disable_
+- DISABLE_VIRUS_CHECKS
+    - disables virus scanning/checks (also disabled clamd and freshclam)
+    - _set to any value to disable_
+- DISABLE_SPAM_CHECKS
+    - disables spam checking
+    - _set to any value to disable_
+
+- AMAVIS_SA_TAG_LEVEL_DEFLT
+    - amavis setting _sa_tag_level_deflt_ - default _undef_
+- AMAVIS_SA_TAG2_LEVEL_DEFLT
+    - amavis setting _sa_tag2_level_deflt_ - default _5_
+- AMAVIS_SA_KILL_LEVEL_DEFLT
+    - amavis setting _sa_kill_level_deflt_ - default _20_
+
+
+__HIGH PRIORITY ENVIRONMENT VARIABLE__
+
+the following variable/s are only if you have some specific settings you need.
+They help you overwrite everything after the config was generated.
+If you can update your setting with the variables from above, it is strongly recommended to use them!
+
+- POSTFIX_RAW_CONFIG_<POSTFIX_SETTING_NAME>
+    - set/edit all configurations in /etc/postfix/main.cf using the POSTFIX_RAW_CONFIG_ followed by the setting name
+
+_for example: to set_ ___mynetworks_style = subnet___ _just add a environment variable_ ___POSTFIX_RAW_CONFIG_MYNETWORKS_STYLE=subnet___
 
 ## Volumes
 
