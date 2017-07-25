@@ -4,18 +4,18 @@
 AVAILABLE_NETWORKS="127.0.0.0/8"
 if [ ! -z ${AUTO_TRUST_NETWORKS+x} ]; then
   AVAILABLE_NETWORKS=$(list-available-networks.sh | tr '\n' ',' | sed 's/,$//g')
-  echo ">> trust all available networks: $AVAILABLE_NETWORKS"
+  logger -t CONTAINER " trust all available networks: $AVAILABLE_NETWORKS"
 fi
 
 postconf -e "mynetworks=$AVAILABLE_NETWORKS"
 
 if [ ! -z ${ADDITIONAL_MYNETWORKS+x} ]; then
-  echo ">> update mynetworks to: $AVAILABLE_NETWORKS,$ADDITIONAL_MYNETWORKS"
+  logger -t CONTAINER " update mynetworks to: $AVAILABLE_NETWORKS,$ADDITIONAL_MYNETWORKS"
   postconf -e "mynetworks=$AVAILABLE_NETWORKS,$ADDITIONAL_MYNETWORKS"
 fi
 
 if [ ! -z ${MYNETWORKS+x} ]; then
-  echo ">> update mynetworks to: $MYNETWORKS"
+  logger -t CONTAINER " update mynetworks to: $MYNETWORKS"
   postconf -e "mynetworks=$MYNETWORKS"
 fi
 
@@ -24,13 +24,13 @@ INITIALIZED="/.initialized"
 if [ ! -f "$INITIALIZED" ]; then
 	touch "$INITIALIZED"
 
-  echo ">> cleaning old unused tls settings"
+  logger -t CONTAINER " cleaning old unused tls settings"
   sed -i 's/^smtp.*_tls_.*//g' /etc/postfix/main.cf
 
 	if [ -z ${RELAYHOST+x} ]; then
-    echo ">> it is advised to set a relayhost to avoid open relays..."
+    logger -t CONTAINER " it is advised to set a relayhost to avoid open relays..."
   else
-    echo ">> setting relayhost to: $RELAYHOST"
+    logger -t CONTAINER " setting relayhost to: $RELAYHOST"
     postconf -e "relayhost=$RELAYHOST"
   fi
 
@@ -46,14 +46,14 @@ if [ ! -f "$INITIALIZED" ]; then
   MAIL_NAME=$(echo "$MAIL_FQDN" | cut -d'.' -f1)
   MAILDOMAIN=$(echo "$MAIL_FQDN" | cut -d'.' -f2-)
 
-  echo ">> set mail host to: $MAIL_FQDN"
+  logger -t CONTAINER " set mail host to: $MAIL_FQDN"
   sed -i '12a\$myhostname = "'"$MAIL_FQDN"'";\' etc/amavis/conf.d/05-node_id
   echo "$MAIL_FQDN" > /etc/mailname
   echo "$MAIL_NAME" > /etc/hostname
   postconf -e "myhostname=$MAIL_FQDN"
 
   if [ -z ${DISABLE_AMAVIS+x} ]; then
-    echo ">> AMAVIS - enabling spam/virus scanning"
+    logger -t CONTAINER " AMAVIS - enabling spam/virus scanning"
 
 cat <<EOF >> /etc/postfix/main.cf
 #ContentFilter:
@@ -98,7 +98,7 @@ EOF
 
     echo '1;  # ensure a defined return' >> /etc/amavis/conf.d/15-content_filter_mode
 
-    echo ">> AMAVIS - modify settings"
+    logger -t CONTAINER " AMAVIS - modify settings"
 
     if [ -z ${AMAVIS_SA_TAG_LEVEL_DEFLT+x} ]; then
       AMAVIS_SA_TAG_LEVEL_DEFLT="undef"
@@ -136,7 +136,7 @@ EOF
   fi
 
   if [[ -f "$POSTFIX_SSL_OUT_CERT" && -f "$POSTFIX_SSL_OUT_KEY" ]]; then
-    echo ">> POSTFIX SSL - enabling outgoing SSL"
+    logger -t CONTAINER " POSTFIX SSL - enabling outgoing SSL"
 cat <<EOF >> /etc/postfix/main.cf
 ##### TLS settings ######
 
@@ -170,7 +170,7 @@ EOF
   fi
 
   if [[ -f "$POSTFIX_SSL_IN_CERT" && -f "$POSTFIX_SSL_IN_KEY" ]]; then
-    echo ">> POSTFIX SSL - enabling incoming SSL"
+    logger -t CONTAINER " POSTFIX SSL - enabling incoming SSL"
 cat <<EOF >> /etc/postfix/main.cf
 ### incoming connections ###
 # smtpd_tls_security_level=encrypt # for secure connections only
@@ -190,14 +190,14 @@ EOF
   fi
 
   if [ -f /etc/postfix/tls/rootCA.crt ]; then
-    echo ">> POSTFIX SSL - enabling CA based Client Authentication"
+    logger -t CONTAINER " POSTFIX SSL - enabling CA based Client Authentication"
     postconf -e smtpd_tls_ask_ccert=yes
     postconf -e smtpd_tls_CAfile=/etc/postfix/tls/rootCA.crt
     postconf -e smtpd_recipient_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
   fi
 
   if [ ! -z ${POSTFIX_SSL_IN_CERT_FINGERPRINTS+x} ] || [ -f /etc/postfix/tls/relay_clientcerts ]; then
-    echo ">> POSTFIX SSL - enabling Fingerprint based Client Authentication"
+    logger -t CONTAINER " POSTFIX SSL - enabling Fingerprint based Client Authentication"
     if [ ! -z ${POSTFIX_SSL_IN_CERT_FINGERPRINTS+x} ]; then
       echo "$POSTFIX_SSL_IN_CERT_FINGERPRINTS" >> /etc/postfix/tls/relay_clientcerts
     fi
@@ -208,64 +208,64 @@ EOF
   fi
 
   if [ -f /etc/postfix/tls/dh1024.pem ]; then
-    echo ">> using dh1024.pem provided in volume"
+    logger -t CONTAINER " using dh1024.pem provided in volume"
     postconf -e 'smtpd_tls_dh1024_param_file=/etc/postfix/tls/dh1024.pem'
   fi
 
   if [ -f /etc/postfix/tls/dh512.pem ]; then
-    echo ">> using dh512.pem provided in volume"
+    logger -t CONTAINER " using dh512.pem provided in volume"
     postconf -e 'smtpd_tls_dh512_param_file=/etc/postfix/tls/dh512.pem'
   fi
 
   if [ ! -z ${POSTFIX_QUEUE_LIFETIME_BOUNCE+x} ]; then
-    echo ">> POSTFIX set bounce_queue_lifetime = $POSTFIX_QUEUE_LIFETIME_BOUNCE"
+    logger -t CONTAINER " POSTFIX set bounce_queue_lifetime = $POSTFIX_QUEUE_LIFETIME_BOUNCE"
     postconf -e "bounce_queue_lifetime=$POSTFIX_QUEUE_LIFETIME_BOUNCE"
   fi
 
   if [ ! -z ${POSTFIX_QUEUE_LIFETIME_MAX+x} ]; then
-    echo ">> POSTFIX set maximal_queue_lifetime = $POSTFIX_QUEUE_LIFETIME_MAX"
+    logger -t CONTAINER " POSTFIX set maximal_queue_lifetime = $POSTFIX_QUEUE_LIFETIME_MAX"
     postconf -e "maximal_queue_lifetime=$POSTFIX_QUEUE_LIFETIME_MAX"
   fi
 
   if [ ! -z ${POSTFIX_MYDESTINATION+x} ]; then
-    echo ">> POSTFIX set mydestination = $POSTFIX_MYDESTINATION"
+    logger -t CONTAINER " POSTFIX set mydestination = $POSTFIX_MYDESTINATION"
     postconf -e "mydestination=$POSTFIX_MYDESTINATION"
   fi
 
   if [ ! -z ${POSTFIX_RELAY_DOMAINS+x} ]; then
-    echo ">> POSTFIX set relay_domains = $POSTFIX_RELAY_DOMAINS"
+    logger -t CONTAINER " POSTFIX set relay_domains = $POSTFIX_RELAY_DOMAINS"
     postconf -e "relay_domains=$POSTFIX_RELAY_DOMAINS"
   fi
 
   if [ ! -z ${POSTFIX_SMTPD_BANNER+x} ]; then
-    echo ">> POSTFIX set smtpd_banner = $POSTFIX_SMTPD_BANNER"
+    logger -t CONTAINER " POSTFIX set smtpd_banner = $POSTFIX_SMTPD_BANNER"
     postconf -e "smtpd_banner=$POSTFIX_SMTPD_BANNER"
   fi
 
   if [ -d /etc/postfix/additional/opendkim ]; then
-    echo ">> enabling DKIM"
+    logger -t CONTAINER " enabling DKIM"
     dkim-helper.sh
   fi
 
   if [ -f /etc/postfix/additional/transport ]; then
-    echo ">> POSTFIX found 'additional/transport' activating it as transport_maps"
+    logger -t CONTAINER " POSTFIX found 'additional/transport' activating it as transport_maps"
     postmap /etc/postfix/additional/transport
     postconf -e "transport_maps = hash:/etc/postfix/additional/transport"
   fi
 
-  echo ">> RUNIT - create services"
+  logger -t CONTAINER " RUNIT - create services"
   mkdir -p /etc/sv/rsyslog /etc/sv/postfix /etc/sv/opendkim /etc/sv/amavis /etc/sv/clamd /etc/sv/freshclam
-  echo -e '#!/bin/sh\nexec /usr/sbin/rsyslogd -n' > /etc/sv/rsyslog/run
+  echo -e '#!/bin/sh\nexec /usr/sbin/rsyslogd -n | logger -t rsyslogd' > /etc/sv/rsyslog/run
     echo -e '#!/bin/sh\nrm /var/run/rsyslogd.pid' > /etc/sv/rsyslog/finish
-  echo -e '#!/bin/sh\nexec  /usr/sbin/opendkim -f -x /etc/opendkim.conf -u opendkim -P /var/run/opendkim/opendkim.pid -p inet:8891@localhost' > /etc/sv/opendkim/run
-  echo -e '#!/bin/sh\nexec /usr/sbin/amavisd-new foreground' > /etc/sv/amavis/run
+  echo -e '#!/bin/sh\nexec  /usr/sbin/opendkim -f -x /etc/opendkim.conf -u opendkim -P /var/run/opendkim/opendkim.pid -p inet:8891@localhost | logger -t opendkim' > /etc/sv/opendkim/run
+  echo -e '#!/bin/sh\nexec /usr/sbin/amavisd-new foreground | logger -t amavisd-new' > /etc/sv/amavis/run
   echo -e '#!/bin/sh\nservice postfix start; sleep 5; while ps aux | grep [p]ostfix | grep [m]aster > /dev/null 2> /dev/null; do sleep 5; done' > /etc/sv/postfix/run
     echo -e '#!/bin/sh\nservice postfix stop' > /etc/sv/postfix/finish
-  echo -e '#!/bin/sh\nexec /usr/sbin/clamd --foreground=true' > /etc/sv/clamd/run
-  echo -e '#!/bin/sh\nexec freshclam -d --foreground=true' > /etc/sv/freshclam/run
+  echo -e '#!/bin/sh\nexec /usr/sbin/clamd --foreground=true | logger -t clamd' > /etc/sv/clamd/run
+  echo -e '#!/bin/sh\nexec freshclam -d --foreground=true | logger -t freshclam' > /etc/sv/freshclam/run
   chmod a+x /etc/sv/*/run /etc/sv/*/finish
 
-  echo ">> RUNIT - enable services"
+  logger -t CONTAINER " RUNIT - enable services"
   ln -s /etc/sv/postfix /etc/service/postfix
   ln -s /etc/sv/rsyslog /etc/service/rsyslog
 
