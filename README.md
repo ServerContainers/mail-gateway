@@ -74,12 +74,48 @@ __OFFICIAL ENVIRONMENT VARIABLES__
 - AMAVIS_SA_KILL_LEVEL_DEFLT
     - amavis setting _sa_kill_level_deflt_ - default _20_
 
+- POSTFIX_SSL_OUT_CERT
+    - path to SSL Client certificate (outgoing connections)
+    - default: _/etc/postfix/tls/client.crt_
+- POSTFIX_SSL_OUT_KEY
+    - path to SSL Client key (outgoing connections)
+    - default: _/etc/postfix/tls/client.key_
+- POSTFIX_SSL_OUT_SECURITY_LEVEL
+    - SSL security level for outgoing connections
+    - default: _may_
+
+- POSTFIX_SSL_IN_CERT
+    - path to SSL Cert/Bundle (incoming connections)
+    - default: _/etc/postfix/tls/bundle.crt_
+- POSTFIX_SSL_IN_KEY
+    - path to SSL Cert key (incoming connections)
+    - default: _/etc/postfix/tls/cert.key_
+- POSTFIX_SSL_IN_SECURITY_LEVEL
+    - SSL security level for incoming connections
+    - default: _may_
+
+- POSTFIX_SSL_IN_CERT_FINGERPRINTS
+    - trusted incoming certificate fingerprints (multiline) (which clients are authenticated)
+    - e.g.: _AA:BB:CC:DD:EE:FF:12:34:56:67:2E:FB:3F:34:99:90:AB:CD:EF:4C trusted.mailserver.example.tld_
+
+- POSTFIX_QUEUE_LIFETIME_BOUNCE
+    - The  maximal  time  a  BOUNCE MESSAGE is queued before it is considered undeliverable
+    - By default, this is the same as the queue life time for regular mail
+- POSTFIX_QUEUE_LIFETIME_MAX
+    - maximum lifetime of regular (non bounce) messages
+
+- POSTFIX_RELAY_DOMAINS
+    - specify certain domains which will be relayed (by default all mails will be forwarded)
+- POSTFIX_MYDESTINATION
+    - specify the domains which this mail-gateway handles (I recommend to use only POSTFIX_RELAY_DOMAINS)
 
 __HIGH PRIORITY ENVIRONMENT VARIABLE__
 
 the following variable/s are only if you have some specific settings you need.
 They help you overwrite everything after the config was generated.
 If you can update your setting with the variables from above, it is strongly recommended to use them!
+
+_some characters might brake your configuration!_
 
 - POSTFIX_RAW_CONFIG_<POSTFIX_SETTING_NAME>
     - set/edit all configurations in /etc/postfix/main.cf using the POSTFIX_RAW_CONFIG_ followed by the setting name
