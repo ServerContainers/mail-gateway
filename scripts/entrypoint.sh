@@ -1,6 +1,12 @@
 #!/bin/bash
 
+#
 # can be done on every start...
+#
+
+# cleanup/remove amavis pidfile
+rm -f /run/amavis/amavisd.pid
+
 AVAILABLE_NETWORKS="127.0.0.0/8"
 if [ ! -z ${AUTO_TRUST_NETWORKS+x} ]; then
   AVAILABLE_NETWORKS=$(list-available-networks.sh | tr '\n' ',' | sed 's/,$//g')
