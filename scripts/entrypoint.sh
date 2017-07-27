@@ -5,7 +5,7 @@
 #
 
 # cleanup/remove amavis pidfile
-rm -f /run/amavis/amavisd.pid
+rm -f /run/amavis/amavisd.pid 2> /dev/null > /dev/null
 
 AVAILABLE_NETWORKS="127.0.0.0/8"
 if [ ! -z ${AUTO_TRUST_NETWORKS+x} ]; then
