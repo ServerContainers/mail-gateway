@@ -262,6 +262,11 @@ EOF
     postconf -e "transport_maps = hash:/etc/postfix/additional/transport"
   fi
 
+  if [ -f /etc/postfix/additional/header_checks ]; then
+    echo ">> POSTFIX found 'additional/header_checks' activating it as header_checks"
+    postconf -e "header_checks = regexp:/etc/postfix/additional/header_checks"
+  fi
+
   echo ">> RUNIT - create services"
   mkdir -p /etc/sv/rsyslog /etc/sv/postfix /etc/sv/opendkim /etc/sv/amavis /etc/sv/clamd /etc/sv/freshclam
   echo -e '#!/bin/sh\nexec /usr/sbin/rsyslogd -n' > /etc/sv/rsyslog/run
