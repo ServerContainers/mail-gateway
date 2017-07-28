@@ -273,6 +273,7 @@ EOF
     echo -e '#!/bin/sh\nrm /var/run/rsyslogd.pid' > /etc/sv/rsyslog/finish
   echo -e '#!/bin/sh\nexec  /usr/sbin/opendkim -f -x /etc/opendkim.conf -u opendkim -P /var/run/opendkim/opendkim.pid -p inet:8891@localhost | logger -t opendkim' > /etc/sv/opendkim/run
   echo -e '#!/bin/sh\nexec /usr/sbin/amavisd-new foreground | logger -t amavisd-new' > /etc/sv/amavis/run
+    echo -e '#!/bin/sh\nrm -f /run/amavis/amavisd.pid' > /etc/sv/amavis/finish
   echo -e '#!/bin/sh\nservice postfix start; sleep 5; while ps aux | grep [p]ostfix | grep [m]aster > /dev/null 2> /dev/null; do sleep 5; done' > /etc/sv/postfix/run
     echo -e '#!/bin/sh\nservice postfix stop' > /etc/sv/postfix/finish
   echo -e '#!/bin/sh\nexec /usr/sbin/clamd --foreground=true | logger -t clamd' > /etc/sv/clamd/run
