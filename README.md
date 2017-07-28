@@ -137,7 +137,7 @@ _for example: to set_ ___mynetworks_style = subnet___ _just add a environment va
     - this is where the container looks for:
         - opendkim (folder - enables opendkim support if it exists - but needs __DKIM\_DOMAINS__ env)
         - transport (postfix transport text-file - without been postmaped)
-	- header_checks (postfix header_checks regex file)
+        - header_checks (postfix header_checks regex file)
 
 # Cheat Sheet
 
