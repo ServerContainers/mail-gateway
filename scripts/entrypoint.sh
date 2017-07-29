@@ -61,6 +61,12 @@ if [ ! -f "$INITIALIZED" ]; then
   echo "$MAIL_NAME" > /etc/hostname
   postconf -e "myhostname=$MAIL_FQDN"
 
+  if [ -z ${POSTFIX_SMTPD_BANNER+x} ]; then
+    POSTFIX_SMTPD_BANNER="$MAIL_FQDN ESMTP"
+  fi
+  echo ">> POSTFIX set smtpd_banner = $POSTFIX_SMTPD_BANNER"
+  postconf -e "smtpd_banner=$POSTFIX_SMTPD_BANNER"
+
   if [ -z ${DISABLE_AMAVIS+x} ]; then
     echo ">> AMAVIS - enabling spam/virus scanning"
 
@@ -129,8 +135,6 @@ EOF
     sed -i -e 's/sa_tag2_level_deflt.*/sa_tag2_level_deflt = '"$AMAVIS_SA_TAG2_LEVEL_DEFLT"';/g' /etc/amavis/conf.d/20-debian_defaults
     sed -i -e 's/sa_kill_level_deflt.*/sa_kill_level_deflt = '"$AMAVIS_SA_KILL_LEVEL_DEFLT"';/g' /etc/amavis/conf.d/20-debian_defaults
   fi
-
-  # FIXME: configure postfix, cache time for mail relaing etc.
 
   if [ -z ${POSTFIX_SSL_OUT_CERT+x} ]; then
     POSTFIX_SSL_OUT_CERT="/etc/postfix/tls/client.crt"
@@ -246,11 +250,6 @@ EOF
     postconf -e "relay_domains=$POSTFIX_RELAY_DOMAINS"
   fi
 
-  if [ ! -z ${POSTFIX_SMTPD_BANNER+x} ]; then
-    echo ">> POSTFIX set smtpd_banner = $POSTFIX_SMTPD_BANNER"
-    postconf -e "smtpd_banner=$POSTFIX_SMTPD_BANNER"
-  fi
-
   if [ -d /etc/postfix/additional/opendkim ]; then
     echo ">> enabling DKIM"
     dkim-helper.sh
@@ -306,7 +305,6 @@ EOF
     echo -e "\n## POSTFIX_RAW_CONFIG ##\n" >> /etc/postfix/main.cf
     for I_CONF in "$(env | grep '^POSTFIX_RAW_CONFIG_')"
     do
-      #FIXME clean old value
       CONFD_CONF_NAME=$(echo "$I_CONF" | cut -d'=' -f1 | sed 's/POSTFIX_RAW_CONFIG_//g' | tr '[:upper:]' '[:lower:]')
       CONFD_CONF_VALUE=$(echo "$I_CONF" | sed 's/^[^=]*=//g')
 
