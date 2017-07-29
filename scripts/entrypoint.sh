@@ -266,6 +266,25 @@ EOF
     postconf -e "header_checks = regexp:/etc/postfix/additional/header_checks"
   fi
 
+  ##
+  # POSTFIX RAW Config ENVs
+  ##
+  if env | grep '^POSTFIX_RAW_CONFIG_'
+  then
+    echo -e "\n## POSTFIX_RAW_CONFIG ##\n" >> /etc/postfix/main.cf
+    for I_CONF in "$(env | grep '^POSTFIX_RAW_CONFIG_')"
+    do
+      CONFD_CONF_NAME=$(echo "$I_CONF" | cut -d'=' -f1 | sed 's/POSTFIX_RAW_CONFIG_//g' | tr '[:upper:]' '[:lower:]')
+      CONFD_CONF_VALUE=$(echo "$I_CONF" | sed 's/^[^=]*=//g')
+
+      echo "$CONFD_CONF_VALUE" >> /etc/postfix/main.cf
+    done
+  fi
+
+  #
+  # RUNIT
+  #
+
   echo ">> RUNIT - create services"
   mkdir -p /etc/sv/rsyslog /etc/sv/postfix /etc/sv/opendkim /etc/sv/amavis /etc/sv/clamd /etc/sv/freshclam
   echo -e '#!/bin/sh\nexec /usr/sbin/rsyslogd -n' > /etc/sv/rsyslog/run
@@ -294,22 +313,6 @@ EOF
       ln -s /etc/sv/clamd /etc/service/clamd
       ln -s /etc/sv/freshclam /etc/service/freshclam
     fi
-  fi
-
-
-  ##
-  # POSTFIX RAW Config ENVs
-  ##
-  if env | grep '^POSTFIX_RAW_CONFIG_'
-  then
-    echo -e "\n## POSTFIX_RAW_CONFIG ##\n" >> /etc/postfix/main.cf
-    for I_CONF in "$(env | grep '^POSTFIX_RAW_CONFIG_')"
-    do
-      CONFD_CONF_NAME=$(echo "$I_CONF" | cut -d'=' -f1 | sed 's/POSTFIX_RAW_CONFIG_//g' | tr '[:upper:]' '[:lower:]')
-      CONFD_CONF_VALUE=$(echo "$I_CONF" | sed 's/^[^=]*=//g')
-
-      echo "$CONFD_CONF_VALUE" >> /etc/postfix/main.cf
-    done
   fi
 
 fi
