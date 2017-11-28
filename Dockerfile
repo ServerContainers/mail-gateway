@@ -5,6 +5,7 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get -q -y update \
  && apt-get -q -y install runit \
                           telnet \
+                          net-tools \
                           postfix \
                           rsyslog \
                           clamav clamav-daemon amavisd-new spamassassin razor pyzor \
