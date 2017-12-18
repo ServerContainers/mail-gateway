@@ -32,6 +32,7 @@ View in GitHub [ServerContainers/mail-gateway](https://github.com/ServerContaine
 
 This container is not meant to be used as a mail server which stores mails and handles mailboxes.
 Just put this container in between the outside world and your mailbox handeling mail server.
+Take a look at [ServerContainers/mail-box](https://github.com/ServerContainers/mail-box) for a mail server with mailbox/imap handling.
 
 ## Environment variables
 
