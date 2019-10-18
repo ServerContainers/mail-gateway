@@ -9,7 +9,7 @@ RUN apt-get -q -y update \
                           postfix \
                           rsyslog \
                           clamav clamav-daemon amavisd-new spamassassin razor pyzor \
-                          arj bzip2 cabextract cpio file gzip nomarch pax unzip zoo zip zoo \
+                          arj bzip2 cabextract cpio file gzip nomarch pax unzip zip \
                           \
                           opendkim \
                           opendkim-tools \
