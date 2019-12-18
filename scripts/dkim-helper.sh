@@ -53,6 +53,9 @@ for domain in $(echo $DKIM_DOMAINS); do
   else
     echo ">> key for domain $domain exists already"
   fi
+  
+  echo ">> DKIM - fix owner of directory /etc/postfix/additional/opendkim/keys (set to opendkim:opendkim)"
+  chown -R opendkim:opendkim /etc/postfix/additional/opendkim/keys
 
   echo "---------------------------------------------------------------------"
   cat $keydir/default.txt
