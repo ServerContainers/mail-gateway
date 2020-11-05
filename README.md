@@ -1,7 +1,10 @@
 # Docker Mail Gateway Postfix (servercontainers/mail-gateway)
 _maintained by ServerContainers_
 
-[FAQ - All you need to know about the servercontainers Containers](https://marvin.im/docker-faq-all-you-need-to-know-about-the-marvambass-containers/)
+## Changelogs
+
+* 2020-11-05
+    * multiarch build
 
 ## What is it
 
