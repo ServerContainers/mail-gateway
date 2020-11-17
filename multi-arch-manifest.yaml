@@ -14,8 +14,3 @@ manifests:
       architecture: arm
       os: linux
       variant: v7
-  - image: servercontainers/mail-gateway:latest-arm32v6
-    platform:
-      architecture: arm
-      os: linux
-      variant: v6
