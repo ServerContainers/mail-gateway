@@ -5,6 +5,7 @@ _maintained by ServerContainers_
 
 * 2020-12-01
     * fixed broken containers/build
+    * better tls settings (tls 1.3 support)
 * 2020-11-05
     * multiarch build
 
