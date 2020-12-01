@@ -12,7 +12,7 @@ ENV PATH="/container/scripts:${PATH}"
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get -q -y update \
- && apt-get -q -y install runit \
+ && apt-get -q -y install --no-install-recommends runit \
                           telnet \
                           net-tools \
                           postfix \
@@ -28,7 +28,7 @@ RUN apt-get -q -y update \
  && head -n $(grep -n RULES /etc/rsyslog.conf | cut -d':' -f1) /etc/rsyslog.conf > /etc/rsyslog.conf.new \
  && mv /etc/rsyslog.conf.new /etc/rsyslog.conf \
  && echo '*.*        /dev/stdout' >> /etc/rsyslog.conf \
- && sed -i '/imklog.so/d' /etc/rsyslog.conf \
+ && sed -i '/imklog/d' /etc/rsyslog.conf \
  \
  && adduser clamav amavis
 
@@ -45,10 +45,7 @@ RUN openssl dhparam -out /etc/postfix/dh1024.pem 1024 \
 # ClamAV
 #
 
-RUN service clamav-daemon restart \
-  ; timeout 3 freshclam \
-  ; rm /var/lib/clamav/mirrors.dat \
-  ; freshclam
+RUN timeout 500 freshclam || true
 
 #
 # razor & pyzor
