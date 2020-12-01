@@ -17,6 +17,9 @@ RUN apt-get -q -y update \
  && apt-get -q -y clean \
  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
  \
+ && mkdir -p /var/run/clamav \
+ && chown clamav.clamav -R /var/run/clamav \
+ \
  && head -n $(grep -n RULES /etc/rsyslog.conf | cut -d':' -f1) /etc/rsyslog.conf > /etc/rsyslog.conf.new \
  && mv /etc/rsyslog.conf.new /etc/rsyslog.conf \
  && echo '*.*        /dev/stdout' >> /etc/rsyslog.conf \
