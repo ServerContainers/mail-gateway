@@ -57,6 +57,7 @@ __OFFICIAL ENVIRONMENT VARIABLES__
     - _set to any value to enable_
 - ADDITIONAL_MYNETWORKS
     - add this specific network to the automatically trusted onces
+    - set to `0.0.0.0/0` to make this an open relay
 - MYNETWORKS
     - ignore all auto configured _mynetworks_ and replace them with this value
     - _overwrites networks specified in ADDITIONAL_MYNETWORKS_
