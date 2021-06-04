@@ -63,5 +63,5 @@ RUN postconf -e 'mydestination=localhost, localhost.localdomain, localhost' \
 COPY . /container/
 
 VOLUME ["/etc/postfix/tls", "/etc/postfix/additional"]
-
+HEALTHCHECK CMD ["/container/scripts/docker-healthcheck.sh"]
 ENTRYPOINT ["entrypoint.sh"]

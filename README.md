@@ -3,6 +3,8 @@ _maintained by ServerContainers_
 
 ## Changelogs
 
+* 2021-06-04
+    * added healthcheck (will fail when certs are updated without container restart)
 * 2020-12-01
     * fixed broken containers/build
     * better tls settings (tls 1.3 support)
