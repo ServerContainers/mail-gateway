@@ -323,4 +323,7 @@ EOF
 
 fi
 
+rm -rf /tmp/tls 2> /dev/null
+cp -a /etc/postfix/tls /tmp/tls
+
 exec runsvdir -P /etc/service
