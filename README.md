@@ -3,6 +3,8 @@ _maintained by ServerContainers_
 
 ## Changelogs
 
+* 2021-07-28
+    * healthcheck will fail if certificate is 3 days or less valid or already expired
 * 2021-06-04
     * added healthcheck (will fail when certs are updated without container restart)
 * 2020-12-01
