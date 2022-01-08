@@ -1,0 +1,2 @@
+#!/bin/sh
+rm -f /run/amavis/amavisd.pid

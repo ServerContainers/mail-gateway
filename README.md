@@ -1,8 +1,22 @@
 # Docker Mail Gateway Postfix (servercontainers/mail-gateway)
 _maintained by ServerContainers_
 
+
+## Versioning
+
+You'll find all images tagged like `d11.2-p3.5.6-1_b1` which means `d<debian version>-p<postfix version (with some esacped chars)>`.
+This way you can pin your installation/configuration to a certian version. or easily roll back if you experience any problems
+(don't forget to open a issue in that case ;D).
+
+The `latest` version will be updated/released after I managed to test a new pinned version in my production environment.
+This way I can easily find and fix bugs without affecting any users. It will result in a way more stable container.
+
 ## Changelogs
 
+* 2022-01-08
+    * new build script
+    * version tagging
+    * update to debian `bullseye`
 * 2021-07-28
     * healthcheck will fail if certificate is 3 days or less valid or already expired
 * 2021-06-04
@@ -32,7 +46,7 @@ This Dockerfile (available as ___servercontainers/mail-gateway___) gives you a P
 
 For Configuration of the Server you use environment Variables and volume files.
 
-It's based on the [debian:jessie](https://registry.hub.docker.com/_/debian:jessie/) Image
+It's based on the [debian:bullseye](https://registry.hub.docker.com/_/debian:jessie/) Image
 
 View in Docker Registry [servercontainers/mail-gateway](https://registry.hub.docker.com/u/servercontainers/mail-gateway/)
 

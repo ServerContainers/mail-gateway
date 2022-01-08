@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/sbin/amavisd-new foreground | logger -t amavisd-new

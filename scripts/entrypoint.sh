@@ -148,10 +148,17 @@ EOF
     POSTFIX_SSL_OUT_SECURITY_LEVEL="may"
   fi
 
+cat <<EOF >> /etc/postfix/main.cf
+
+##### TLS settings ######
+
+ssl_min_protocol = TLSv1.1
+
+EOF
+
   if [[ -f "$POSTFIX_SSL_OUT_CERT" && -f "$POSTFIX_SSL_OUT_KEY" ]]; then
     echo ">> POSTFIX SSL - enabling outgoing SSL"
 cat <<EOF >> /etc/postfix/main.cf
-##### TLS settings ######
 
 ### outgoing connections ###
 # smtp_tls_security_level=encrypt # for secure connections only
@@ -161,12 +168,18 @@ smtp_tls_key_file=$POSTFIX_SSL_OUT_KEY
 
 smtp_tls_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
 smtp_tls_mandatory_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
+
 smtp_tls_protocols = !SSLv2 !SSLv3
 smtp_tls_mandatory_protocols = !SSLv2, !SSLv3
-smtp_tls_mandatory_ciphers=high
+
+smtp_tls_mandatory_ciphers=medium
+
+smtp_tls_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+smtp_tls_mandatory_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
 
 smtp_tls_session_cache_database = btree:\${data_directory}/smtp_scache
 smtp_tls_loglevel = 1
+
 EOF
   fi
 
@@ -185,6 +198,7 @@ EOF
   if [[ -f "$POSTFIX_SSL_IN_CERT" && -f "$POSTFIX_SSL_IN_KEY" ]]; then
     echo ">> POSTFIX SSL - enabling incoming SSL"
 cat <<EOF >> /etc/postfix/main.cf
+
 ### incoming connections ###
 # smtpd_tls_security_level=encrypt # for secure connections only
 smtpd_tls_security_level=$POSTFIX_SSL_IN_SECURITY_LEVEL
@@ -194,14 +208,10 @@ smtpd_tls_key_file=$POSTFIX_SSL_IN_KEY
 smtpd_tls_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
 smtpd_tls_mandatory_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
 
-smtp_tls_mandatory_ciphers=medium
 smtpd_tls_mandatory_ciphers=high
 
-ssl_min_protocol = TLSv1.1
 smtpd_tls_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
-smtp_tls_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
 smtpd_tls_mandatory_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
-smtp_tls_mandatory_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
 
 smtpd_tls_session_cache_database = btree:\${data_directory}/smtpd_scache
 smtpd_tls_loglevel = 1
@@ -291,33 +301,20 @@ EOF
   # RUNIT
   #
 
-  echo ">> RUNIT - create services"
-  mkdir -p /etc/sv/rsyslog /etc/sv/postfix /etc/sv/opendkim /etc/sv/amavis /etc/sv/clamd /etc/sv/freshclam
-  echo -e '#!/bin/sh\nexec /usr/sbin/rsyslogd -n' > /etc/sv/rsyslog/run
-    echo -e '#!/bin/sh\nrm /var/run/rsyslogd.pid' > /etc/sv/rsyslog/finish
-  echo -e '#!/bin/sh\nexec  /usr/sbin/opendkim -f -x /etc/opendkim.conf -u opendkim -P /var/run/opendkim/opendkim.pid -p inet:8891@localhost | logger -t opendkim' > /etc/sv/opendkim/run
-  echo -e '#!/bin/sh\nexec /usr/sbin/amavisd-new foreground | logger -t amavisd-new' > /etc/sv/amavis/run
-    echo -e '#!/bin/sh\nrm -f /run/amavis/amavisd.pid' > /etc/sv/amavis/finish
-  echo -e '#!/bin/sh\nservice postfix start; sleep 5; while ps aux | grep [p]ostfix | grep [m]aster > /dev/null 2> /dev/null; do sleep 5; done' > /etc/sv/postfix/run
-    echo -e '#!/bin/sh\nservice postfix stop' > /etc/sv/postfix/finish
-  echo -e '#!/bin/sh\nexec /usr/sbin/clamd --foreground=true | logger -t clamd' > /etc/sv/clamd/run
-  echo -e '#!/bin/sh\nexec freshclam -d --foreground=true | logger -t freshclam' > /etc/sv/freshclam/run
-  chmod a+x /etc/sv/*/run /etc/sv/*/finish
-
   echo ">> RUNIT - enable services"
-  ln -s /etc/sv/postfix /etc/service/postfix
-  ln -s /etc/sv/rsyslog /etc/service/rsyslog
+  ln -s /container/config/runit/postfix /etc/service/postfix
+  ln -s /container/config/runit/rsyslog /etc/service/rsyslog
 
   if [ -d /etc/postfix/additional/opendkim ]; then
-    ln -s /etc/sv/opendkim /etc/service/opendkim
+    ln -s /container/config/runit/opendkim /etc/service/opendkim
   fi
 
   if [ -z ${DISABLE_AMAVIS+x} ]; then
-    ln -s /etc/sv/amavis /etc/service/amavis
+    ln -s /container/config/runit/amavis /etc/service/amavis
 
     if [ -z ${DISABLE_VIRUS_CHECKS+x} ]; then
-      ln -s /etc/sv/clamd /etc/service/clamd
-      ln -s /etc/sv/freshclam /etc/service/freshclam
+      ln -s /container/config/runit/clamd /etc/service/clamd
+      ln -s /container/config/runit/freshclam /etc/service/freshclam
     fi
   fi
 
@@ -326,4 +323,9 @@ fi
 rm -rf /tmp/tls 2> /dev/null
 cp -a /etc/postfix/tls /tmp/tls
 
-exec runsvdir -P /etc/service
+##
+# CMD
+##
+echo ">> CMD: exec docker CMD"
+echo "$@"
+exec "$@"

@@ -3,8 +3,7 @@ version: '3.3'
 services:
 
   mail-gateway:
-    build:
-      context: .
+    build: .
     image: servercontainers/mail-gateway
     restart: always
     environment:

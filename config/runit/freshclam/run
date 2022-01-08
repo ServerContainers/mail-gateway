@@ -1,0 +1,2 @@
+#!/bin/sh
+exec freshclam -d --foreground=true | logger -t freshclam

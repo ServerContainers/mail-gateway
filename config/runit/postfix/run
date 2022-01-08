@@ -1,0 +1,2 @@
+#!/bin/sh
+service postfix start; sleep 5; while ps aux | grep [p]ostfix | grep [m]aster > /dev/null 2> /dev/null; do sleep 5; done

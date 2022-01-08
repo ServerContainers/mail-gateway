@@ -1,4 +1,4 @@
-FROM debian:buster
+FROM debian:bullseye
 
 ENV PATH="/container/scripts:${PATH}"
 ENV DEBIAN_FRONTEND noninteractive
@@ -65,3 +65,5 @@ COPY . /container/
 VOLUME ["/etc/postfix/tls", "/etc/postfix/additional"]
 HEALTHCHECK CMD ["/container/scripts/docker-healthcheck.sh"]
 ENTRYPOINT ["entrypoint.sh"]
+
+CMD [ "runsvdir","-P", "/etc/service" ]
