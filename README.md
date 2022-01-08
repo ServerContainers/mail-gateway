@@ -46,9 +46,9 @@ This Dockerfile (available as ___servercontainers/mail-gateway___) gives you a P
 
 For Configuration of the Server you use environment Variables and volume files.
 
-It's based on the [debian:bullseye](https://registry.hub.docker.com/_/debian:jessie/) Image
+It's based on the [debian:bullseye](https://registry.hub.docker.com/_/debian/) Image
 
-View in Docker Registry [servercontainers/mail-gateway](https://registry.hub.docker.com/u/servercontainers/mail-gateway/)
+View in Docker Hub [servercontainers/mail-gateway](https://hub.docker.com/r/servercontainers/mail-gateway)
 
 View in GitHub [ServerContainers/mail-gateway](https://github.com/ServerContainers/mail-gateway)
 
