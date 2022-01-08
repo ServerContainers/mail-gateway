@@ -148,17 +148,11 @@ EOF
     POSTFIX_SSL_OUT_SECURITY_LEVEL="may"
   fi
 
-cat <<EOF >> /etc/postfix/main.cf
-
-##### TLS settings ######
-
-ssl_min_protocol = TLSv1.1
-
-EOF
-
   if [[ -f "$POSTFIX_SSL_OUT_CERT" && -f "$POSTFIX_SSL_OUT_KEY" ]]; then
     echo ">> POSTFIX SSL - enabling outgoing SSL"
 cat <<EOF >> /etc/postfix/main.cf
+
+##### TLS settings ######
 
 ### outgoing connections ###
 # smtp_tls_security_level=encrypt # for secure connections only
@@ -168,9 +162,6 @@ smtp_tls_key_file=$POSTFIX_SSL_OUT_KEY
 
 smtp_tls_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
 smtp_tls_mandatory_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
-
-smtp_tls_protocols = !SSLv2 !SSLv3
-smtp_tls_mandatory_protocols = !SSLv2, !SSLv3
 
 smtp_tls_mandatory_ciphers=medium
 
@@ -215,6 +206,7 @@ smtpd_tls_mandatory_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv
 
 smtpd_tls_session_cache_database = btree:\${data_directory}/smtpd_scache
 smtpd_tls_loglevel = 1
+
 EOF
   fi
 

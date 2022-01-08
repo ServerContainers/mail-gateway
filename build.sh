@@ -10,8 +10,10 @@ if [ -z ${DEBIAN_VERSION+x} ] || [ -z ${POSTFIX_VERSION+x} ]; then
   export POSTFIX_VERSION=$(docker run --rm -ti "$IMG" dpkg --list postfix | grep '^ii' | sed 's/^[^0-9]*//g' | cut -d ' ' -f1 | sed 's/[+=]/_/g' | tr -d '\r')
 fi
 
-echo "check if image was already build and pushed - skip check on release version"
-echo "$@" | grep -v "release" && docker pull "$IMG:d$DEBIAN_VERSION-p$POSTFIX_VERSION" 2>/dev/null >/dev/null && echo "image already build" && exit 1
+if echo "$@" | grep -v "force" 2>/dev/null >/dev/null; then
+  echo "check if image was already build and pushed - skip check on release version"
+  echo "$@" | grep -v "release" && docker pull "$IMG:d$DEBIAN_VERSION-p$POSTFIX_VERSION" 2>/dev/null >/dev/null && echo "image already build" && exit 1
+fi
 
 docker buildx build -q --pull --no-cache --platform "$PLATFORM" -t "$IMG:d$DEBIAN_VERSION-p$POSTFIX_VERSION" --push .
 
