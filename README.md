@@ -261,32 +261,36 @@ Please note, that the Common Name (CN) is important and should be the FQDN to th
 
     ### outgoing connections ###
     # smtp_tls_security_level=encrypt # for secure connections only
-    smtp_tls_security_level=may
-    smtp_tls_cert_file=/etc/postfix/tls/bundle.crt
-    smtp_tls_key_file=/etc/postfix/tls/cert.key
+    smtp_tls_security_level=$POSTFIX_SSL_OUT_SECURITY_LEVEL
+    smtp_tls_cert_file=$POSTFIX_SSL_OUT_CERT
+    smtp_tls_key_file=$POSTFIX_SSL_OUT_KEY
 
     smtp_tls_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
     smtp_tls_mandatory_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
-    smtp_tls_protocols = !SSLv2 !SSLv3
-    smtp_tls_mandatory_protocols = !SSLv2, !SSLv3
-    smtp_tls_mandatory_ciphers=high
 
-    smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+    smtp_tls_mandatory_ciphers=medium
+
+    smtp_tls_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+    smtp_tls_mandatory_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+
+    smtp_tls_session_cache_database = btree:\${data_directory}/smtp_scache
     smtp_tls_loglevel = 1
 
     ### incoming connections ###
     # smtpd_tls_security_level=encrypt # for secure connections only
-    smtpd_tls_security_level=may
-    smtpd_tls_cert_file=/etc/postfix/tls/bundle.crt
-    smtpd_tls_key_file=/etc/postfix/tls/cert.key
+    smtpd_tls_security_level=$POSTFIX_SSL_IN_SECURITY_LEVEL
+    smtpd_tls_cert_file=$POSTFIX_SSL_IN_CERT
+    smtpd_tls_key_file=$POSTFIX_SSL_IN_KEY
 
     smtpd_tls_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
     smtpd_tls_mandatory_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
-    smtpd_tls_protocols = !SSLv2 !SSLv3
-    smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3
+
     smtpd_tls_mandatory_ciphers=high
 
-    smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+    smtpd_tls_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+    smtpd_tls_mandatory_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+
+    smtpd_tls_session_cache_database = btree:\${data_directory}/smtpd_scache
     smtpd_tls_loglevel = 1
 
 
