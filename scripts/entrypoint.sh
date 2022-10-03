@@ -84,6 +84,7 @@ smtp-amavis  unix    -    -    n    -    2    smtp
  -o smtp_data_done_timeout=1200
  -o smtp_send_xforward_command=yes
  -o disable_dns_lookups=yes
+
 127.0.0.1:10025 inet    n    -    n    -    -    smtpd
  -o content_filter=
  -o local_recipient_maps=
@@ -153,20 +154,27 @@ EOF
   if [[ -f "$POSTFIX_SSL_OUT_CERT" && -f "$POSTFIX_SSL_OUT_KEY" ]]; then
     echo ">> POSTFIX SSL - enabling outgoing SSL"
 cat <<EOF >> /etc/postfix/main.cf
+
 ##### TLS settings ######
+
 ### outgoing connections ###
 # smtp_tls_security_level=encrypt # for secure connections only
 smtp_tls_security_level=$POSTFIX_SSL_OUT_SECURITY_LEVEL
 smtp_tls_cert_file=$POSTFIX_SSL_OUT_CERT
 smtp_tls_key_file=$POSTFIX_SSL_OUT_KEY
 smtp_tls_CAfile=/etc/ssl/certs/ca-certificates.crt
+
 smtp_tls_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
 smtp_tls_mandatory_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
+
 smtp_tls_mandatory_ciphers=medium
+
 smtp_tls_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
 smtp_tls_mandatory_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+
 smtp_tls_session_cache_database = btree:\${data_directory}/smtp_scache
 smtp_tls_loglevel = 1
+
 EOF
   fi
 
@@ -185,18 +193,24 @@ EOF
   if [[ -f "$POSTFIX_SSL_IN_CERT" && -f "$POSTFIX_SSL_IN_KEY" ]]; then
     echo ">> POSTFIX SSL - enabling incoming SSL"
 cat <<EOF >> /etc/postfix/main.cf
+
 ### incoming connections ###
 # smtpd_tls_security_level=encrypt # for secure connections only
 smtpd_tls_security_level=$POSTFIX_SSL_IN_SECURITY_LEVEL
 smtpd_tls_cert_file=$POSTFIX_SSL_IN_CERT
 smtpd_tls_key_file=$POSTFIX_SSL_IN_KEY
+
 smtpd_tls_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
 smtpd_tls_mandatory_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
+
 smtpd_tls_mandatory_ciphers=high
+
 smtpd_tls_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
 smtpd_tls_mandatory_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+
 smtpd_tls_session_cache_database = btree:\${data_directory}/smtpd_scache
 smtpd_tls_loglevel = 1
+
 EOF
   fi
 
