@@ -201,10 +201,10 @@ EOF
   fi
 
   if [ -n "$(ls -A /usr/local/share/ca-certificates 2>/dev/null)" ]; then
-	echo ">> POSTFIX SSL - enabling CA based Client Authentication from system certificate store"
-	postconf -e smtpd_tls_ask_ccert=yes
-	postconf -e smtpd_tls_CAfile=/etc/ssl/certs/ca-certificates.crt
-	postconf -e smtpd_recipient_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
+    echo ">> POSTFIX SSL - enabling CA based Client Authentication from system certificate store"
+    postconf -e smtpd_tls_ask_ccert=yes
+    postconf -e smtpd_tls_CAfile=/etc/ssl/certs/ca-certificates.crt
+    postconf -e smtpd_recipient_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
   elif [ -f /etc/postfix/tls/rootCA.crt ]; then
     echo ">> POSTFIX SSL - enabling CA based Client Authentication"
     postconf -e smtpd_tls_ask_ccert=yes
