@@ -18,8 +18,6 @@ if [ ! -f "$INITIALIZED" ]; then
     exit 1
   fi
 
-  touch "$INITIALIZED"
-
   MAIL_FQDN=$(echo "$MAIL_FQDN" | sed 's/[^.0-9a-z\-]//g')
   MAIL_NAME=$(echo "$MAIL_FQDN" | cut -d'.' -f1)
   MAILDOMAIN=$(echo "$MAIL_FQDN" | cut -d'.' -f2-)
@@ -201,13 +199,14 @@ EOF
       echo "Certificate Authorization - missing certificate fingerprints, creating empty file..."
       touch /etc/postfix/tls/relay_certs
     fi
-    postmap /etc/postfix/tls/relay_clientcerts
-    cat <<EOF >> /etc/postfix/master-new.cf
+      postmap /etc/postfix/tls/relay_clientcerts
+      cat <<EOF >> /etc/postfix/master-new.cf
  -o smtpd_tls_CAfile=
  -o smtpd_relay_restrictions=permit_tls_clientcerts,reject
  -o relay_clientcerts=hash:/etc/postfix/tls/relay_clientcerts
 
 EOF
+    fi
   else
     echo "Certificate Authorization - method not found, exiting..."
     exit 4
@@ -307,6 +306,8 @@ EOF
 
   # Update system certificate store
   update-ca-certificates
+
+  touch "$INITIALIZED"
 
   # RUNIT
   echo "RUNIT - enable services"
