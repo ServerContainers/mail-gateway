@@ -21,6 +21,7 @@ services:
       - POSTMASTER_ADDRESS=${POSTMASTER_ADDRESS}
       - POSTFIX_SSL_CERT_FILENAME=cert.pem
       - POSTFIX_SSL_KEY_FILENAME=key.pem
+      - POSTFIX_SSL_CACERT_FILENAME=ca.crt
       - CERT_AUTH_METHOD=fingerprint
       #- DISABLE_AMAVIS=true
       #- DISABLE_VIRUS_CHECKS=true
