@@ -1,85 +1,229 @@
 #!/bin/bash
 
-#
-# can be done on every start...
-#
-
-# cleanup/remove amavis pidfile
+# Cleanup/remove amavis pidfile
 rm -f /run/amavis/amavisd.pid 2> /dev/null > /dev/null
 
-# Update system certificate store
-update-ca-certificates
-
-AVAILABLE_NETWORKS="127.0.0.0/8"
-if [ ! -z ${AUTO_TRUST_NETWORKS+x} ]; then
-  AVAILABLE_NETWORKS=$(list-available-networks.sh | tr '\n' ',' | sed 's/,$//g')
-  echo ">> trust all available networks: $AVAILABLE_NETWORKS"
-fi
-
-postconf -e "mynetworks=$AVAILABLE_NETWORKS"
-
-if [ ! -z ${ADDITIONAL_MYNETWORKS+x} ]; then
-  echo ">> update mynetworks to: $AVAILABLE_NETWORKS,$ADDITIONAL_MYNETWORKS"
-  postconf -e "mynetworks=$AVAILABLE_NETWORKS,$ADDITIONAL_MYNETWORKS"
-fi
-
-if [ ! -z ${MYNETWORKS+x} ]; then
-  if [ ! -z ${ADDITIONAL_MYNETWORKS+x} ]; then
-    echo ">> Warning ADDITIONAL_MYNETWORKS will be ignored! only $MYNETWORKS will be set!"
-  fi
-  echo ">> update mynetworks to: $MYNETWORKS"
-  postconf -e "mynetworks=$MYNETWORKS"
-fi
-
-# only on container creation
+# Only on container creation
 INITIALIZED="/.initialized"
 if [ ! -f "$INITIALIZED" ]; then
-	touch "$INITIALIZED"
 
-  echo ">> cleaning old unused tls settings"
-  sed -i 's/^smtp.*_tls_.*//g' /etc/postfix/main.cf
-
-	if [ -z ${RELAYHOST+x} ]; then
-    echo ">> it is advised to set a relayhost to avoid open relays..."
-  else
-    echo ">> setting relayhost to: $RELAYHOST"
-    postconf -e "relayhost=$RELAYHOST"
+  if [ -z ${MAIL_FQDN+x} ] || 
+     [ -z ${POSTMASTER_ADDRESS+x} ] || 
+     [ -z ${POSTFIX_SSL_CERT_FILENAME+x} ] || 
+     [ -z ${POSTFIX_SSL_KEY_FILENAME+x} ] || 
+     [ -z ${CERT_AUTH_METHOD+x} ] || 
+     [ ! -f /etc/postfix/tls/$POSTFIX_SSL_CERT_FILENAME ] || 
+     [ ! -f /etc/postfix/tls/$POSTFIX_SSL_KEY_FILENAME ]; then
+    echo "Missing required environment variables or certificates, exiting..."
+    exit 1
   fi
 
-  if [ -z ${MAIL_FQDN+x} ]; then
-    MAIL_FQDN="amavis.mail-gateway"
-  fi
+  touch "$INITIALIZED"
 
-  if echo "$MAIL_FQDN" | grep -v '\.'; then
-    MAIL_FQDN="$MAIL_FQDN.local"
-  fi
   MAIL_FQDN=$(echo "$MAIL_FQDN" | sed 's/[^.0-9a-z\-]//g')
-
   MAIL_NAME=$(echo "$MAIL_FQDN" | cut -d'.' -f1)
   MAILDOMAIN=$(echo "$MAIL_FQDN" | cut -d'.' -f2-)
 
-  echo ">> set mail host to: $MAIL_FQDN"
+  echo "Setting mail host to: $MAIL_FQDN"
   sed -i '12a\$myhostname = "'"$MAIL_FQDN"'";\' etc/amavis/conf.d/05-node_id
   echo "$MAIL_FQDN" > /etc/mailname
   echo "$MAIL_NAME" > /etc/hostname
-  postconf -e "myhostname=$MAIL_FQDN"
 
-  if [ -z ${POSTFIX_SMTPD_BANNER+x} ]; then
-    POSTFIX_SMTPD_BANNER="$MAIL_FQDN ESMTP"
+  QUEUE_LIFETIME_BOUNCE=5d
+  QUEUE_LIFETIME_MAX=5d
+
+  if [ ! -z ${POSTFIX_QUEUE_LIFETIME_BOUNCE+x} ]; then
+    echo "POSTFIX set bounce_queue_lifetime = $POSTFIX_QUEUE_LIFETIME_BOUNCE"
+    QUEUE_LIFETIME_BOUNCE=$POSTFIX_QUEUE_LIFETIME_BOUNCE
   fi
-  echo ">> POSTFIX set smtpd_banner = $POSTFIX_SMTPD_BANNER"
-  postconf -e "smtpd_banner=$POSTFIX_SMTPD_BANNER"
 
-  if [ -z ${DISABLE_AMAVIS+x} ]; then
-    echo ">> AMAVIS - enabling spam/virus scanning"
+  if [ ! -z ${POSTFIX_QUEUE_LIFETIME_MAX+x} ]; then
+    echo "POSTFIX set maximal_queue_lifetime = $POSTFIX_QUEUE_LIFETIME_MAX"
+    QUEUE_LIFETIME_MAX=$POSTFIX_QUEUE_LIFETIME_MAX
+  fi
 
-cat <<EOF >> /etc/postfix/main.cf
-#ContentFilter:
-content_filter = smtp-amavis:[127.0.0.1]:10024
-receive_override_options = no_address_mappings
+  if [ ! -f /etc/postfix/additional/transport ]; then
+    echo "Transport map is empty, no emails will be relayed. Creating empty file..."
+    touch /etc/postfix/additional/transport
+  fi
+  postmap /etc/postfix/additional/transport
+
+  if [ ! -f /etc/postfix/additional/relay ]; then
+    echo "No relay domains are specified, no emails will be relayed. Creating empty file..."
+    touch /etc/postfix/additional/relay
+  fi
+  postmap /etc/postfix/additional/relay
+
+  if [ -z ${ABUSE_ADDRESS+x} ]; then
+    ABUSE_ADDRESS=$POSTMASTER_ADDRESS
+  fi
+
+  # Must have postmaster and abuse accounts enabled to be RFC compliant
+  cat <<EOF >  /etc/postfix/virtual
+postmaster    $POSTMASTER_ADDRESS
+abuse    $ABUSE_ADDRESS
+EOF
+  postmap /etc/postfix/virtual
+
+  if [ ! -f /etc/postfix/additional/header_checks ]; then
+    echo "No header checks file. Creating empty file..."
+    touch /etc/postfix/additional/header_checks
+  fi
+
+  dh1024_file=/etc/postfix/dh1024.pem
+  dh512_file=/etc/postfix/dh512.pem
+
+  if [ -f /etc/postfix/tls/dh1024.pem ]; then
+    dh1024_file=/etc/postfix/tls/dh1024.pem
+  fi
+
+  if [ -f /etc/postfix/tls/dh512.pem ]; then
+    dh512_file=/etc/postfix/tls/dh512.pem
+  fi
+
+  cat <<EOF > /etc/postfix/main-new.cf
+###### Host Settings ######
+
+smtpd_banner = $MAIL_FQDN ESMTP
+myhostname = $MAIL_FQDN
+
+###### General Settings ######
+
+biff = no
+append_dot_mydomain = no
+readme_directory = no
+compatibility_level = 2
+mailbox_size_limit = 0
+recipient_delimiter = +
+inet_interfaces = all
+inet_protocols = all
+mydestination = 
+relayhost = 
+mynetworks = 
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+local_recipient_maps = 
+local_transport = error:local mail delivery is disabled
+transport_maps = hash:/etc/postfix/additional/transport
+relay_domains = hash:/etc/postfix/additional/relay
+virtual_alias_maps = hash:/etc/postfix/virtual
+smtpd_helo_required = yes
+bounce_queue_lifetime = $QUEUE_LIFETIME_BOUNCE
+maximal_queue_lifetime = $QUEUE_LIFETIME_MAX
+
+###### Restrictions ######
+
+smtpd_helo_restrictions = 
+    reject_invalid_helo_hostname,
+    reject_non_fqdn_helo_hostname,
+    reject_unknown_helo_hostname
+
+smtpd_sender_restrictions = 
+    reject_non_fqdn_sender,
+    reject_unlisted_sender,
+    reject_unauth_destination,
+    reject_unknown_sender_domain,
+    reject_unauth_pipelining
+
+smtpd_recipient_restrictions = 
+    reject_unauth_destination,
+    reject_unknown_sender_domain,
+    reject_unauth_pipelining
+
+smtpd_relay_restrictions = 
+    reject_unauth_destination
+
+##### TLS Settings ######
+
+# Outgoing Connections #
+
+smtp_tls_security_level = may
+smtp_tls_cert_file = /etc/postfix/tls/$POSTFIX_SSL_CERT_FILENAME
+smtp_tls_key_file = /etc/postfix/tls/$POSTFIX_SSL_KEY_FILENAME
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+smtp_tls_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
+smtp_tls_mandatory_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
+smtp_tls_mandatory_ciphers = high
+smtp_tls_protocols = TLSv1.3, TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+smtp_tls_mandatory_protocols = TLSv1.3, TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+smtp_tls_loglevel = 1
+
+# Incoming Connections #
+
+smtpd_tls_security_level=may
+smtpd_tls_cert_file = /etc/postfix/tls/$POSTFIX_SSL_CERT_FILENAME
+smtpd_tls_key_file = /etc/postfix/tls/$POSTFIX_SSL_KEY_FILENAME
+smtpd_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+smtpd_tls_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
+smtpd_tls_mandatory_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
+smtpd_tls_mandatory_ciphers = high
+smtpd_tls_protocols = TLSv1.3, TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+smtpd_tls_mandatory_protocols = TLSv1.3, TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+smtpd_tls_loglevel = 1
+smtpd_tls_dh1024_param_file = $dh1024_file
+smtpd_tls_dh512_param_file = $dh512_file
+
 EOF
 
-cat <<EOF >> /etc/postfix/master.cf
+  cp /etc/postfix/master.cf /etc/postfix/master-new.cf
+  cat <<EOF >> /etc/postfix/master-new.cf
+
+submission inet n       -       n       -       -       smtpd
+ -o syslog_name=postfix/submission
+ -o smtpd_tls_security_level=encrypt
+ -o smtpd_tls_auth_only=yes
+ -o smtpd_enforce_tls=yes
+ -o smtpd_tls_ask_ccert=yes
+ -o smtpd_reject_unlisted_recipient=no
+ -o smtpd_client_restrictions=
+ -o smtpd_helo_restrictions=
+ -o smtpd_sender_restrictions=reject_unknown_sender_domain,reject_unauth_pipelining
+ -o smtpd_recipient_restrictions=reject_unknown_sender_domain,reject_unauth_pipelining
+ -o milter_macro_daemon_name=ORIGINATING
+ -o header_checks=regexp:/etc/postfix/additional/header_checks
+ -o mime_header_checks=regexp:/etc/postfix/additional/header_checks
+EOF
+
+  if [ "$CERT_AUTH_METHOD" = "ca" ]; then
+    if [ ! -f /etc/postfix/tls/$POSTFIX_SSL_CACERT_FILENAME ]; then
+      echo "Certificate Authorization - missing CA certificate, exiting..."
+      exit 2
+    fi
+    cat <<EOF >> /etc/postfix/master-new.cf
+ -o smtpd_tls_CAfile=/etc/postfix/tls/$POSTFIX_SSL_CACERT_FILENAME
+ -o smtpd_relay_restrictions=permit_tls_all_clientcerts,reject
+
+EOF
+  else if [ "$CERT_AUTH_METHOD" = "fingerprint" ]; then
+    if [ ! -f /etc/postfix/tls/relay_certs ]; then
+      echo "Certificate Authorization - missing certificate fingerprints, creating empty file..."
+      touch /etc/postfix/tls/relay_certs
+    fi
+    postmap /etc/postfix/tls/relay_clientcerts
+    cat <<EOF >> /etc/postfix/master-new.cf
+ -o smtpd_tls_CAfile=
+ -o smtpd_relay_restrictions=permit_tls_clientcerts,reject
+ -o relay_clientcerts=hash:/etc/postfix/tls/relay_clientcerts
+
+EOF
+  else
+    echo "Certificate Authorization - method not found, exiting..."
+    exit 4
+  fi
+
+  if [ -z ${DISABLE_AMAVIS+x} ]; then
+    echo "AMAVIS - enabling spam/virus scanning"
+
+    cat <<EOF >> /etc/postfix/main-new.cf
+### Amavis ###
+content_filter = smtp-amavis:[127.0.0.1]:10024
+receive_override_options = no_address_mappings
+
+EOF
+
+    cat <<EOF >> /etc/postfix/master-new.cf
 smtp-amavis  unix    -    -    n    -    2    smtp
  -o smtp_data_done_timeout=1200
  -o smtp_send_xforward_command=yes
@@ -100,6 +244,7 @@ smtp-amavis  unix    -    -    n    -    2    smtp
  -o smtpd_hard_error_limit=1000
  -o receive_override_options=no_header_body_checks
  -o smtp_tls_security_level=none
+
 EOF
 
     echo 'use strict;' > /etc/amavis/conf.d/15-content_filter_mode
@@ -116,7 +261,7 @@ EOF
 
     echo '1;  # ensure a defined return' >> /etc/amavis/conf.d/15-content_filter_mode
 
-    echo ">> AMAVIS - modify settings"
+    echo "AMAVIS - modify settings"
 
     if [ -z ${AMAVIS_SA_TAG_LEVEL_DEFLT+x} ]; then
       AMAVIS_SA_TAG_LEVEL_DEFLT="undef"
@@ -139,170 +284,32 @@ EOF
     sed -i -e 's/sa_kill_level_deflt.*/sa_kill_level_deflt = '"$AMAVIS_SA_KILL_LEVEL_DEFLT"';/g' /etc/amavis/conf.d/20-debian_defaults
   fi
 
-  if [ -z ${POSTFIX_SSL_OUT_CERT+x} ]; then
-    POSTFIX_SSL_OUT_CERT="/etc/postfix/tls/client.crt"
-  fi
-
-  if [ -z ${POSTFIX_SSL_OUT_KEY+x} ]; then
-    POSTFIX_SSL_OUT_KEY="/etc/postfix/tls/client.key"
-  fi
-
-  if [ -z ${POSTFIX_SSL_OUT_SECURITY_LEVEL+x} ]; then
-    POSTFIX_SSL_OUT_SECURITY_LEVEL="may"
-  fi
-
-  if [[ -f "$POSTFIX_SSL_OUT_CERT" && -f "$POSTFIX_SSL_OUT_KEY" ]]; then
-    echo ">> POSTFIX SSL - enabling outgoing SSL"
-cat <<EOF >> /etc/postfix/main.cf
-
-##### TLS settings ######
-
-### outgoing connections ###
-# smtp_tls_security_level=encrypt # for secure connections only
-smtp_tls_security_level=$POSTFIX_SSL_OUT_SECURITY_LEVEL
-smtp_tls_cert_file=$POSTFIX_SSL_OUT_CERT
-smtp_tls_key_file=$POSTFIX_SSL_OUT_KEY
-smtp_tls_CAfile=/etc/ssl/certs/ca-certificates.crt
-
-smtp_tls_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
-smtp_tls_mandatory_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
-
-smtp_tls_mandatory_ciphers=medium
-
-smtp_tls_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
-smtp_tls_mandatory_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
-
-smtp_tls_session_cache_database = btree:\${data_directory}/smtp_scache
-smtp_tls_loglevel = 1
-
-EOF
-  fi
-
-  if [ -z ${POSTFIX_SSL_IN_CERT+x} ]; then
-    POSTFIX_SSL_IN_CERT="/etc/postfix/tls/bundle.crt"
-  fi
-
-  if [ -z ${POSTFIX_SSL_IN_KEY+x} ]; then
-    POSTFIX_SSL_IN_KEY="/etc/postfix/tls/cert.key"
-  fi
-
-  if [ -z ${POSTFIX_SSL_IN_SECURITY_LEVEL+x} ]; then
-    POSTFIX_SSL_IN_SECURITY_LEVEL="may"
-  fi
-
-  if [[ -f "$POSTFIX_SSL_IN_CERT" && -f "$POSTFIX_SSL_IN_KEY" ]]; then
-    echo ">> POSTFIX SSL - enabling incoming SSL"
-cat <<EOF >> /etc/postfix/main.cf
-
-### incoming connections ###
-# smtpd_tls_security_level=encrypt # for secure connections only
-smtpd_tls_security_level=$POSTFIX_SSL_IN_SECURITY_LEVEL
-smtpd_tls_cert_file=$POSTFIX_SSL_IN_CERT
-smtpd_tls_key_file=$POSTFIX_SSL_IN_KEY
-
-smtpd_tls_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
-smtpd_tls_mandatory_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
-
-smtpd_tls_mandatory_ciphers=high
-
-smtpd_tls_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
-smtpd_tls_mandatory_protocols = TLSv1.3 TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
-
-smtpd_tls_session_cache_database = btree:\${data_directory}/smtpd_scache
-smtpd_tls_loglevel = 1
-
-EOF
-  fi
-
-  if [ -n "$(ls -A /usr/local/share/ca-certificates 2>/dev/null)" ]; then
-    echo ">> POSTFIX SSL - enabling CA based Client Authentication from system certificate store"
-    postconf -e smtpd_tls_ask_ccert=yes
-    postconf -e smtpd_tls_CAfile=/etc/ssl/certs/ca-certificates.crt
-    postconf -e smtpd_recipient_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
-  elif [ -f /etc/postfix/tls/rootCA.crt ]; then
-    echo ">> POSTFIX SSL - enabling CA based Client Authentication"
-    postconf -e smtpd_tls_ask_ccert=yes
-    postconf -e smtpd_tls_CAfile=/etc/postfix/tls/rootCA.crt
-    postconf -e smtpd_recipient_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
-  fi
-
-  if [ ! -z ${POSTFIX_SSL_IN_CERT_FINGERPRINTS+x} ] || [ -f /etc/postfix/tls/relay_clientcerts ]; then
-    echo ">> POSTFIX SSL - enabling Fingerprint based Client Authentication"
-    if [ ! -z ${POSTFIX_SSL_IN_CERT_FINGERPRINTS+x} ]; then
-      echo "$POSTFIX_SSL_IN_CERT_FINGERPRINTS" >> /etc/postfix/tls/relay_clientcerts
-    fi
-    postmap /etc/postfix/tls/relay_clientcerts
-    postconf -e smtpd_tls_ask_ccert=yes
-    postconf -e relay_clientcerts=hash:/etc/postfix/tls/relay_clientcerts
-    postconf -e smtpd_recipient_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
-  fi
-
-  if [ -f /etc/postfix/tls/dh1024.pem ]; then
-    echo ">> using dh1024.pem provided in volume"
-    postconf -e 'smtpd_tls_dh1024_param_file=/etc/postfix/tls/dh1024.pem'
-  fi
-
-  if [ -f /etc/postfix/tls/dh512.pem ]; then
-    echo ">> using dh512.pem provided in volume"
-    postconf -e 'smtpd_tls_dh512_param_file=/etc/postfix/tls/dh512.pem'
-  fi
-
-  if [ ! -z ${POSTFIX_QUEUE_LIFETIME_BOUNCE+x} ]; then
-    echo ">> POSTFIX set bounce_queue_lifetime = $POSTFIX_QUEUE_LIFETIME_BOUNCE"
-    postconf -e "bounce_queue_lifetime=$POSTFIX_QUEUE_LIFETIME_BOUNCE"
-  fi
-
-  if [ ! -z ${POSTFIX_QUEUE_LIFETIME_MAX+x} ]; then
-    echo ">> POSTFIX set maximal_queue_lifetime = $POSTFIX_QUEUE_LIFETIME_MAX"
-    postconf -e "maximal_queue_lifetime=$POSTFIX_QUEUE_LIFETIME_MAX"
-  fi
-
-  if [ ! -z ${POSTFIX_MYDESTINATION+x} ]; then
-    echo ">> POSTFIX set mydestination = $POSTFIX_MYDESTINATION"
-    postconf -e "mydestination=$POSTFIX_MYDESTINATION"
-  fi
-
-  if [ ! -z ${POSTFIX_RELAY_DOMAINS+x} ]; then
-    echo ">> POSTFIX set relay_domains = $POSTFIX_RELAY_DOMAINS"
-    postconf -e "relay_domains=$POSTFIX_RELAY_DOMAINS"
-  fi
-
   if [ -d /etc/postfix/additional/opendkim ]; then
-    echo ">> enabling DKIM"
+    echo "Enabling DKIM..."
     dkim-helper.sh
   fi
 
-  if [ -f /etc/postfix/additional/transport ]; then
-    echo ">> POSTFIX found 'additional/transport' activating it as transport_maps"
-    postmap /etc/postfix/additional/transport
-    postconf -e "transport_maps = hash:/etc/postfix/additional/transport"
-  fi
-
-  if [ -f /etc/postfix/additional/header_checks ]; then
-    echo ">> POSTFIX found 'additional/header_checks' activating it as header_checks"
-    postconf -e "header_checks = regexp:/etc/postfix/additional/header_checks"
-  fi
-
-  ##
   # POSTFIX RAW Config ENVs
-  ##
   if env | grep '^POSTFIX_RAW_CONFIG_'
   then
-    echo -e "\n## POSTFIX_RAW_CONFIG ##\n" >> /etc/postfix/main.cf
+    echo -e "\n## POSTFIX_RAW_CONFIG ##\n" >> /etc/postfix/main-new.cf
     env | grep '^POSTFIX_RAW_CONFIG_' | while read I_CONF
     do
       CONFD_CONF_NAME=$(echo "$I_CONF" | cut -d'=' -f1 | sed 's/POSTFIX_RAW_CONFIG_//g' | tr '[:upper:]' '[:lower:]')
       CONFD_CONF_VALUE=$(echo "$I_CONF" | sed 's/^[^=]*=//g')
-
-      echo "$CONFD_CONF_NAME""=""$CONFD_CONF_VALUE" >> /etc/postfix/main.cf
+      echo "$CONFD_CONF_NAME""=""$CONFD_CONF_VALUE" >> /etc/postfix/main-new.cf
     done
   fi
 
-  #
-  # RUNIT
-  #
+  # Replace main.cf and master.cf
+  mv /etc/postfix/main-new.cf /etc/postfix/main.cf
+  mv /etc/postfix/master-new.cf /etc/postfix/master.cf
 
-  echo ">> RUNIT - enable services"
+  # Update system certificate store
+  update-ca-certificates
+
+  # RUNIT
+  echo "RUNIT - enable services"
   ln -s /container/config/runit/postfix /etc/service/postfix
   ln -s /container/config/runit/rsyslog /etc/service/rsyslog
 
@@ -312,7 +319,6 @@ EOF
 
   if [ -z ${DISABLE_AMAVIS+x} ]; then
     ln -s /container/config/runit/amavis /etc/service/amavis
-
     if [ -z ${DISABLE_VIRUS_CHECKS+x} ]; then
       ln -s /container/config/runit/clamd /etc/service/clamd
       ln -s /container/config/runit/freshclam /etc/service/freshclam
@@ -324,9 +330,7 @@ fi
 rm -rf /tmp/tls 2> /dev/null
 cp -a /etc/postfix/tls /tmp/tls
 
-##
 # CMD
-##
-echo ">> CMD: exec docker CMD"
+echo "CMD: exec docker CMD"
 echo "$@"
 exec "$@"
