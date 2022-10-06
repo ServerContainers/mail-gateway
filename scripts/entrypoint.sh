@@ -7,12 +7,12 @@ rm -f /run/amavis/amavisd.pid 2> /dev/null > /dev/null
 INITIALIZED="/.initialized"
 if [ ! -f "$INITIALIZED" ]; then
 
-  if [ -z ${MAIL_FQDN+x} ] || 
-     [ -z ${POSTMASTER_ADDRESS+x} ] || 
-     [ -z ${POSTFIX_SSL_CERT_FILENAME+x} ] || 
-     [ -z ${POSTFIX_SSL_KEY_FILENAME+x} ] || 
-     [ -z ${CERT_AUTH_METHOD+x} ] || 
-     [ ! -f /etc/postfix/tls/$POSTFIX_SSL_CERT_FILENAME ] || 
+  if [ -z ${MAIL_FQDN+x} ] || \
+     [ -z ${POSTMASTER_ADDRESS+x} ] || \
+     [ -z ${POSTFIX_SSL_CERT_FILENAME+x} ] || \
+     [ -z ${POSTFIX_SSL_KEY_FILENAME+x} ] || \
+     [ -z ${CERT_AUTH_METHOD+x} ] || \
+     [ ! -f /etc/postfix/tls/$POSTFIX_SSL_CERT_FILENAME ] || \
      [ ! -f /etc/postfix/tls/$POSTFIX_SSL_KEY_FILENAME ]; then
     echo "Missing required environment variables or certificates, exiting..."
     exit 1
