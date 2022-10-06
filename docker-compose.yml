@@ -3,7 +3,7 @@ services:
 
   mail-gateway:
     build: .
-    image: hshq/mail-gateway:v1
+    image: hshq/mail-gateway:v2
     container_name: mail-gateway
     restart: unless-stopped
     networks:
