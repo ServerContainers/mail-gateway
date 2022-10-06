@@ -194,19 +194,18 @@ EOF
  -o smtpd_relay_restrictions=permit_tls_all_clientcerts,reject
 
 EOF
-  else if [ "$CERT_AUTH_METHOD" = "fingerprint" ]; then
+  elif [ "$CERT_AUTH_METHOD" = "fingerprint" ]; then
     if [ ! -f /etc/postfix/tls/relay_certs ]; then
       echo "Certificate Authorization - missing certificate fingerprints, creating empty file..."
       touch /etc/postfix/tls/relay_certs
     fi
-      postmap /etc/postfix/tls/relay_clientcerts
-      cat <<EOF >> /etc/postfix/master-new.cf
+    postmap /etc/postfix/tls/relay_clientcerts
+    cat <<EOF >> /etc/postfix/master-new.cf
  -o smtpd_tls_CAfile=
  -o smtpd_relay_restrictions=permit_tls_clientcerts,reject
  -o relay_clientcerts=hash:/etc/postfix/tls/relay_clientcerts
 
 EOF
-    fi
   else
     echo "Certificate Authorization - method not found, exiting..."
     exit 4
