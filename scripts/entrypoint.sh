@@ -195,9 +195,9 @@ EOF
 
 EOF
   elif [ "$CERT_AUTH_METHOD" = "fingerprint" ]; then
-    if [ ! -f /etc/postfix/tls/relay_certs ]; then
+    if [ ! -f /etc/postfix/tls/relay_clientcerts ]; then
       echo "Certificate Authorization - missing certificate fingerprints, creating empty file..."
-      touch /etc/postfix/tls/relay_certs
+      touch /etc/postfix/tls/relay_clientcerts
     fi
     postmap /etc/postfix/tls/relay_clientcerts
     cat <<EOF >> /etc/postfix/master-new.cf
