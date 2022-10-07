@@ -293,6 +293,7 @@ EOF
     sed -i -e 's/sa_kill_level_deflt.*/sa_kill_level_deflt = '"$AMAVIS_SA_KILL_LEVEL_DEFLT"';/g' /etc/amavis/conf.d/20-debian_defaults
   fi
 
+  echo 'use strict;' > /etc/amavis/conf.d/50-user
   if [ ! -z ${DKIM_VERIFICATION+x} ]; then
     echo "Enabling DKIM Verification..."
     cat <<EOF > /etc/opendkim.conf
@@ -323,14 +324,13 @@ smtpd_milters = inet:localhost:8891
 non_smtpd_milters = inet:localhost:8891
 
 EOF
-  echo '$enable_dkim_verification = 1;' > /etc/amavis/conf.d/50-user
+    echo '$enable_dkim_verification = 1;' >> /etc/amavis/conf.d/50-user
   fi
-
   #if [ -d /etc/postfix/additional/opendkim ]; then
   #  echo "Enabling DKIM..."
   #  dkim-helper.sh
   #fi
-
+  echo '1;' >> /etc/amavis/conf.d/50-user
   # POSTFIX RAW Config ENVs
   if env | grep '^POSTFIX_RAW_CONFIG_'
   then
