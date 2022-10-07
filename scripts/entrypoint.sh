@@ -323,7 +323,6 @@ non_smtpd_milters = inet:localhost:8891
 
 EOF
   fi
-  service opendkim restart
 
   #if [ -d /etc/postfix/additional/opendkim ]; then
   #  echo "Enabling DKIM..."
@@ -356,7 +355,7 @@ EOF
   ln -s /container/config/runit/postfix /etc/service/postfix
   ln -s /container/config/runit/rsyslog /etc/service/rsyslog
 
-  if [ -d /etc/postfix/additional/opendkim ]; then
+  if [ ! -z ${DKIM_VERIFICATION+x} ]; then
     ln -s /container/config/runit/opendkim /etc/service/opendkim
   fi
 
