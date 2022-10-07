@@ -189,7 +189,7 @@ EOF
       exit 2
     fi
     cat <<EOF >> /etc/postfix/master-new.cf
- -o smtpd_recipient_restrictions=permit_tls_all_clientcerts,reject_unauth_destination
+ -o smtpd_recipient_restrictions=permit_tls_all_clientcerts,reject
  -o smtpd_tls_CAfile=/etc/postfix/tls/$POSTFIX_SSL_CACERT_FILENAME
  -o smtpd_relay_restrictions=permit_tls_all_clientcerts,reject
 
@@ -201,7 +201,7 @@ EOF
     fi
     postmap /etc/postfix/tls/relay_clientcerts
     cat <<EOF >> /etc/postfix/master-new.cf
- -o smtpd_recipient_restrictions=permit_tls_clientcerts,reject_unauth_destination
+ -o smtpd_recipient_restrictions=permit_tls_clientcerts,reject
  -o smtpd_tls_CAfile=/etc/postfix/tls/$POSTFIX_SSL_CACERT_FILENAME
  -o smtpd_relay_restrictions=permit_tls_clientcerts,reject
  -o relay_clientcerts=hash:/etc/postfix/tls/relay_clientcerts
@@ -267,9 +267,7 @@ EOF
      echo '    \%bypass_spam_checks, \@bypass_spam_checks_acl, \$bypass_spam_checks_re);' >> /etc/amavis/conf.d/15-content_filter_mode
     fi
 
-    #echo "\$allowed_added_header_fields{lc('Received')} = 0;" >> /etc/amavis/conf.d/15-content_filter_mode
     echo '1;  # ensure a defined return' >> /etc/amavis/conf.d/15-content_filter_mode
-
     echo "AMAVIS - modify settings"
 
     if [ -z ${AMAVIS_SA_TAG_LEVEL_DEFLT+x} ]; then
@@ -293,46 +291,6 @@ EOF
     sed -i -e 's/sa_kill_level_deflt.*/sa_kill_level_deflt = '"$AMAVIS_SA_KILL_LEVEL_DEFLT"';/g' /etc/amavis/conf.d/20-debian_defaults
   fi
 
-  echo 'use strict;' > /etc/amavis/conf.d/50-user
-  if [ ! -z ${DKIM_VERIFICATION+x} ]; then
-    echo "Enabling DKIM Verification..."
-    cat <<EOF > /etc/opendkim.conf
-Syslog               yes
-SyslogSuccess        yes
-LogWhy               yes
-Canonicalization     relaxed/simple
-Mode                 v
-SubDomains           yes
-OversignHeaders      From
-UserID               opendkim
-UMask                007
-#Socket               inet:8891@localhost
-Socket               local:/run/opendkim/opendkim.sock
-PidFile              /run/opendkim/opendkim.pid
-TrustAnchorFile      /usr/share/dns/root.key
-On-NoSignature       reject
-On-BadSignature      reject
-On-SignatureError    reject
-On-KeyNotFound       reject
-
-EOF
-    cat <<EOF >> /etc/postfix/main-new.cf
-### DKIM signing ###
-milter_default_action = accept
-milter_protocol = 6
-smtpd_milters = inet:localhost:8891
-non_smtpd_milters = inet:localhost:8891
-EOF
-    
-  fi
-  #if [ -d /etc/postfix/additional/opendkim ]; then
-  #  echo "Enabling DKIM..."
-  #  dkim-helper.sh
-  #fi
-  #echo '$enable_dkim_verification = 1;' >> /etc/amavis/conf.d/50-user
-  echo '$log_level = 3;' >> /etc/amavis/conf.d/50-user
-  #echo '$sa_debug = 1;' >> /etc/amavis/conf.d/50-user
-  echo '1;' >> /etc/amavis/conf.d/50-user
   # POSTFIX RAW Config ENVs
   if env | grep '^POSTFIX_RAW_CONFIG_'
   then
