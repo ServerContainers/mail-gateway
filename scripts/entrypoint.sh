@@ -108,8 +108,6 @@ virtual_alias_maps = hash:/etc/postfix/virtual
 smtpd_helo_required = yes
 bounce_queue_lifetime = $QUEUE_LIFETIME_BOUNCE
 maximal_queue_lifetime = $QUEUE_LIFETIME_MAX
-header_checks = regexp:/etc/postfix/additional/header_checks
-mime_header_checks = regexp:/etc/postfix/additional/header_checks
 
 ###### Restrictions ######
 
@@ -182,6 +180,8 @@ submission inet n       -       n       -       -       smtpd
  -o smtpd_helo_restrictions=
  -o smtpd_sender_restrictions=
  -o milter_macro_daemon_name=ORIGINATING
+ -o header_checks=regexp:/etc/postfix/additional/header_checks
+ -o mime_header_checks=regexp:/etc/postfix/additional/header_checks
 EOF
 
   if [ "$CERT_AUTH_METHOD" = "ca" ]; then
@@ -260,6 +260,7 @@ EOF
      echo '    \%bypass_spam_checks, \@bypass_spam_checks_acl, \$bypass_spam_checks_re);' >> /etc/amavis/conf.d/15-content_filter_mode
     fi
 
+    echo "$allowed_added_header_fields{lc('Received')} = 0;" >> /etc/amavis/conf.d/15-content_filter_mode
     echo '1;  # ensure a defined return' >> /etc/amavis/conf.d/15-content_filter_mode
 
     echo "AMAVIS - modify settings"
