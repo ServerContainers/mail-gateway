@@ -144,6 +144,7 @@ smtp_tls_mandatory_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
 smtp_tls_mandatory_ciphers = high
 smtp_tls_protocols = TLSv1.3, TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
 smtp_tls_mandatory_protocols = TLSv1.3, TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+smtp_tls_fingerprint_digest = sha256
 smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 smtp_tls_loglevel = 1
 
@@ -158,6 +159,7 @@ smtpd_tls_mandatory_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
 smtpd_tls_mandatory_ciphers = high
 smtpd_tls_protocols = TLSv1.3, TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
 smtpd_tls_mandatory_protocols = TLSv1.3, TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
+smtpd_tls_fingerprint_digest = sha256
 smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
 smtpd_tls_loglevel = 1
 smtpd_tls_dh1024_param_file = $dh1024_file
@@ -170,19 +172,18 @@ EOF
 
 submission inet n       -       n       -       -       smtpd
  -o syslog_name=postfix/submission
- #-o smtpd_tls_security_level=encrypt
- -o smtpd_tls_security_level=may
- #-o smtpd_tls_auth_only=yes
+ -o smtpd_tls_security_level=encrypt
+ -o smtpd_tls_auth_only=no
  #-o smtpd_enforce_tls=yes
- -o smtpd_tls_ask_ccert=yes
- #-o smtpd_reject_unlisted_recipient=no
+ -o smtpd_tls_req_ccert=yes
+ -o smtpd_reject_unlisted_recipient=no
  -o smtpd_client_restrictions=
  -o smtpd_helo_restrictions=
  -o smtpd_sender_restrictions=
  -o smtpd_recipient_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
  #-o milter_macro_daemon_name=ORIGINATING
  -o header_checks=regexp:/etc/postfix/additional/header_checks
- #-o mime_header_checks=regexp:/etc/postfix/additional/header_checks
+ -o mime_header_checks=regexp:/etc/postfix/additional/header_checks
 EOF
 
   if [ "$CERT_AUTH_METHOD" = "ca" ]; then
@@ -192,7 +193,7 @@ EOF
     fi
     cat <<EOF >> /etc/postfix/master-new.cf
  -o smtpd_tls_CAfile=/etc/postfix/tls/$POSTFIX_SSL_CACERT_FILENAME
- -o smtpd_relay_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
+ -o smtpd_relay_restrictions=permit_tls_all_clientcerts,reject
 
 EOF
   elif [ "$CERT_AUTH_METHOD" = "fingerprint" ]; then
@@ -203,7 +204,7 @@ EOF
     postmap /etc/postfix/tls/relay_clientcerts
     cat <<EOF >> /etc/postfix/master-new.cf
  -o smtpd_tls_CAfile=/etc/postfix/tls/$POSTFIX_SSL_CACERT_FILENAME
- -o smtpd_relay_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
+ -o smtpd_relay_restrictions=permit_tls_clientcerts,reject
  -o relay_clientcerts=hash:/etc/postfix/tls/relay_clientcerts
 
 EOF
