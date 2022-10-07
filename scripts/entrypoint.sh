@@ -330,6 +330,8 @@ EOF
   #  echo "Enabling DKIM..."
   #  dkim-helper.sh
   #fi
+  echo '$log_level = 5;' >> /etc/amavis/conf.d/50-user
+  echo '$sa_debug = 1;' >> /etc/amavis/conf.d/50-user
   echo '1;' >> /etc/amavis/conf.d/50-user
   # POSTFIX RAW Config ENVs
   if env | grep '^POSTFIX_RAW_CONFIG_'
