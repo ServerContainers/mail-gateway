@@ -145,7 +145,7 @@ smtp_tls_mandatory_ciphers = high
 smtp_tls_protocols = TLSv1.3, TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
 smtp_tls_mandatory_protocols = TLSv1.3, TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
 smtp_tls_fingerprint_digest = sha256
-smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+smtp_tls_session_cache_database = btree:\${data_directory}/smtp_scache
 smtp_tls_loglevel = 1
 
 # Incoming Connections #
@@ -160,7 +160,7 @@ smtpd_tls_mandatory_ciphers = high
 smtpd_tls_protocols = TLSv1.3, TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
 smtpd_tls_mandatory_protocols = TLSv1.3, TLSv1.2, !TLSv1.1, !TLSv1, !SSLv2, !SSLv3
 smtpd_tls_fingerprint_digest = sha256
-smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+smtpd_tls_session_cache_database = btree:\${data_directory}/smtpd_scache
 smtpd_tls_loglevel = 1
 smtpd_tls_dh1024_param_file = $dh1024_file
 smtpd_tls_dh512_param_file = $dh512_file
