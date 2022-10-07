@@ -180,7 +180,6 @@ submission inet n       -       n       -       -       smtpd
  -o smtpd_client_restrictions=
  -o smtpd_helo_restrictions=
  -o smtpd_sender_restrictions=
- -o smtpd_recipient_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
  #-o milter_macro_daemon_name=ORIGINATING
  -o header_checks=regexp:/etc/postfix/additional/header_checks
  -o mime_header_checks=regexp:/etc/postfix/additional/header_checks
@@ -192,9 +191,9 @@ EOF
       exit 2
     fi
     cat <<EOF >> /etc/postfix/master-new.cf
+ -o smtpd_recipient_restrictions=permit_tls_all_clientcerts,reject_unauth_destination
  -o smtpd_tls_CAfile=/etc/postfix/tls/$POSTFIX_SSL_CACERT_FILENAME
  -o smtpd_relay_restrictions=permit_tls_all_clientcerts,reject
-
 EOF
   elif [ "$CERT_AUTH_METHOD" = "fingerprint" ]; then
     if [ ! -f /etc/postfix/tls/relay_clientcerts ]; then
@@ -203,10 +202,10 @@ EOF
     fi
     postmap /etc/postfix/tls/relay_clientcerts
     cat <<EOF >> /etc/postfix/master-new.cf
+ -o smtpd_recipient_restrictions=permit_tls_clientcerts,reject_unauth_destination
  -o smtpd_tls_CAfile=/etc/postfix/tls/$POSTFIX_SSL_CACERT_FILENAME
  -o smtpd_relay_restrictions=permit_tls_clientcerts,reject
  -o relay_clientcerts=hash:/etc/postfix/tls/relay_clientcerts
-
 EOF
   else
     echo "Certificate Authorization - method not found, exiting..."
