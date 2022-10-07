@@ -306,7 +306,7 @@ OversignHeaders      From
 UserID               opendkim
 UMask                007
 Socket               inet:8891@localhost
-PidFile              /var/run/opendkim/opendkim.pid
+PidFile              /run/opendkim/opendkim.pid
 TrustAnchorFile      /usr/share/dns/root.key
 On-NoSignature       reject
 On-BadSignature      reject
