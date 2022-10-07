@@ -8,7 +8,7 @@ RUN apt-get -q -y update \
                           telnet net-tools postfix rsyslog \
                           clamav clamav-daemon amavisd-new spamassassin razor pyzor \
                           arj bzip2 cabextract cpio file gzip nomarch pax unzip zip \
-                          opendkim opendkim-tools \
+                          opendkim opendkim-tools nano \
  && apt-get -q -y clean \
  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
  \

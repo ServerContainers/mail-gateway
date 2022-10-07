@@ -170,18 +170,19 @@ EOF
 
 submission inet n       -       n       -       -       smtpd
  -o syslog_name=postfix/submission
- -o smtpd_tls_security_level=encrypt
- -o smtpd_tls_auth_only=yes
- -o smtpd_enforce_tls=yes
+ #-o smtpd_tls_security_level=encrypt
+ -o smtpd_tls_security_level=may
+ #-o smtpd_tls_auth_only=yes
+ #-o smtpd_enforce_tls=yes
  -o smtpd_tls_ask_ccert=yes
- -o smtpd_reject_unlisted_recipient=no
+ #-o smtpd_reject_unlisted_recipient=no
  -o smtpd_client_restrictions=
  -o smtpd_helo_restrictions=
- -o smtpd_sender_restrictions=reject_unknown_sender_domain,reject_unauth_pipelining
- -o smtpd_recipient_restrictions=reject_unknown_sender_domain,reject_unauth_pipelining
- -o milter_macro_daemon_name=ORIGINATING
+ -o smtpd_sender_restrictions=
+ -o smtpd_recipient_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
+ #-o milter_macro_daemon_name=ORIGINATING
  -o header_checks=regexp:/etc/postfix/additional/header_checks
- -o mime_header_checks=regexp:/etc/postfix/additional/header_checks
+ #-o mime_header_checks=regexp:/etc/postfix/additional/header_checks
 EOF
 
   if [ "$CERT_AUTH_METHOD" = "ca" ]; then
@@ -191,7 +192,7 @@ EOF
     fi
     cat <<EOF >> /etc/postfix/master-new.cf
  -o smtpd_tls_CAfile=/etc/postfix/tls/$POSTFIX_SSL_CACERT_FILENAME
- -o smtpd_relay_restrictions=permit_tls_all_clientcerts,reject
+ -o smtpd_relay_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
 
 EOF
   elif [ "$CERT_AUTH_METHOD" = "fingerprint" ]; then
@@ -201,8 +202,8 @@ EOF
     fi
     postmap /etc/postfix/tls/relay_clientcerts
     cat <<EOF >> /etc/postfix/master-new.cf
- -o smtpd_tls_CAfile=
- -o smtpd_relay_restrictions=permit_tls_clientcerts,reject
+ -o smtpd_tls_CAfile=/etc/postfix/tls/$POSTFIX_SSL_CACERT_FILENAME
+ -o smtpd_relay_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
  -o relay_clientcerts=hash:/etc/postfix/tls/relay_clientcerts
 
 EOF
