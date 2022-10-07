@@ -108,6 +108,8 @@ virtual_alias_maps = hash:/etc/postfix/virtual
 smtpd_helo_required = yes
 bounce_queue_lifetime = $QUEUE_LIFETIME_BOUNCE
 maximal_queue_lifetime = $QUEUE_LIFETIME_MAX
+header_checks = regexp:/etc/postfix/additional/header_checks
+mime_header_checks = regexp:/etc/postfix/additional/header_checks
 
 ###### Restrictions ######
 
@@ -174,15 +176,12 @@ submission inet n       -       n       -       -       smtpd
  -o syslog_name=postfix/submission
  -o smtpd_tls_security_level=encrypt
  -o smtpd_tls_auth_only=no
- #-o smtpd_enforce_tls=yes
  -o smtpd_tls_req_ccert=yes
  -o smtpd_reject_unlisted_recipient=no
  -o smtpd_client_restrictions=
  -o smtpd_helo_restrictions=
  -o smtpd_sender_restrictions=
- #-o milter_macro_daemon_name=ORIGINATING
- -o header_checks=regexp:/etc/postfix/additional/header_checks
- -o mime_header_checks=regexp:/etc/postfix/additional/header_checks
+ -o milter_macro_daemon_name=ORIGINATING
 EOF
 
   if [ "$CERT_AUTH_METHOD" = "ca" ]; then
@@ -194,6 +193,7 @@ EOF
  -o smtpd_recipient_restrictions=permit_tls_all_clientcerts,reject_unauth_destination
  -o smtpd_tls_CAfile=/etc/postfix/tls/$POSTFIX_SSL_CACERT_FILENAME
  -o smtpd_relay_restrictions=permit_tls_all_clientcerts,reject
+
 EOF
   elif [ "$CERT_AUTH_METHOD" = "fingerprint" ]; then
     if [ ! -f /etc/postfix/tls/relay_clientcerts ]; then
@@ -206,6 +206,7 @@ EOF
  -o smtpd_tls_CAfile=/etc/postfix/tls/$POSTFIX_SSL_CACERT_FILENAME
  -o smtpd_relay_restrictions=permit_tls_clientcerts,reject
  -o relay_clientcerts=hash:/etc/postfix/tls/relay_clientcerts
+
 EOF
   else
     echo "Certificate Authorization - method not found, exiting..."
