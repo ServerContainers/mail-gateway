@@ -23,8 +23,8 @@ services:
       - POSTFIX_SSL_KEY_FILENAME=key.pem
       - POSTFIX_SSL_CACERT_FILENAME=ca.crt
       - CERT_AUTH_METHOD=fingerprint
+      - DISABLE_VIRUS_CHECKS=true
       #- DISABLE_AMAVIS=true
-      #- DISABLE_VIRUS_CHECKS=true
       #- DISABLE_SPAM_CHECKS=true
 
 networks:
