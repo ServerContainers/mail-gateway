@@ -323,6 +323,7 @@ smtpd_milters = inet:localhost:8891
 non_smtpd_milters = inet:localhost:8891
 
 EOF
+  echo '$enable_dkim_verification = 1;' > /etc/amavis/conf.d/50-user
   fi
 
   #if [ -d /etc/postfix/additional/opendkim ]; then
