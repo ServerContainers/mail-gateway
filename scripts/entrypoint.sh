@@ -180,8 +180,7 @@ submission inet n       -       n       -       -       smtpd
  -o smtpd_helo_restrictions=
  -o smtpd_sender_restrictions=
  -o milter_macro_daemon_name=ORIGINATING
- -o header_checks=regexp:/etc/postfix/additional/header_checks
- -o mime_header_checks=regexp:/etc/postfix/additional/header_checks
+ -o cleanup_service_name=submissioncleanup
 EOF
 
   if [ "$CERT_AUTH_METHOD" = "ca" ]; then
@@ -212,6 +211,14 @@ EOF
     echo "Certificate Authorization - method not found, exiting..."
     exit 4
   fi
+
+  # Performs header checks for submission emails in separate cleanup process
+  cat <<EOF >> /etc/postfix/master-new.cf
+submissioncleanup unix n - - - 0 cleanup
+ -o header_checks=regexp:/etc/postfix/additional/header_checks
+ -o mime_header_checks=regexp:/etc/postfix/additional/header_checks
+
+EOF
 
   if [ -z ${DISABLE_AMAVIS+x} ]; then
     echo "AMAVIS - enabling spam/virus scanning"
@@ -260,7 +267,7 @@ EOF
      echo '    \%bypass_spam_checks, \@bypass_spam_checks_acl, \$bypass_spam_checks_re);' >> /etc/amavis/conf.d/15-content_filter_mode
     fi
 
-    echo "\$allowed_added_header_fields{lc('Received')} = 0;" >> /etc/amavis/conf.d/15-content_filter_mode
+    #echo "\$allowed_added_header_fields{lc('Received')} = 0;" >> /etc/amavis/conf.d/15-content_filter_mode
     echo '1;  # ensure a defined return' >> /etc/amavis/conf.d/15-content_filter_mode
 
     echo "AMAVIS - modify settings"
@@ -286,10 +293,36 @@ EOF
     sed -i -e 's/sa_kill_level_deflt.*/sa_kill_level_deflt = '"$AMAVIS_SA_KILL_LEVEL_DEFLT"';/g' /etc/amavis/conf.d/20-debian_defaults
   fi
 
-  if [ -d /etc/postfix/additional/opendkim ]; then
-    echo "Enabling DKIM..."
-    dkim-helper.sh
+  if [ ! -z ${DKIM_VERIFICATION+x} ]; then
+    echo "Enabling DKIM Verification..."
+    cat <<EOF > /etc/opendkim.conf
+Syslog               yes
+SyslogSuccess        yes
+LogWhy               yes
+Canonicalization     relaxed/simple
+Mode                 v
+SubDomains           yes
+OversignHeaders      From
+UserID               opendkim
+UMask                007
+Socket               inet:8891@localhost
+PidFile              /run/opendkim/opendkim.pid
+TrustAnchorFile      /usr/share/dns/root.key
+
+EOF
+    cat <<EOF >> /etc/postfix/main-new.cf
+### DKIM signing ###
+milter_default_action = accept
+milter_protocol = 6
+smtpd_milters = inet:localhost:8891
+non_smtpd_milters = inet:localhost:8891
+
+EOF
   fi
+  #if [ -d /etc/postfix/additional/opendkim ]; then
+  #  echo "Enabling DKIM..."
+  #  dkim-helper.sh
+  #fi
 
   # POSTFIX RAW Config ENVs
   if env | grep '^POSTFIX_RAW_CONFIG_'
