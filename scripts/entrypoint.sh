@@ -306,8 +306,12 @@ OversignHeaders      From
 UserID               opendkim
 UMask                007
 Socket               inet:8891@localhost
-PidFile              /run/opendkim/opendkim.pid
+PidFile              /var/run/opendkim/opendkim.pid
 TrustAnchorFile      /usr/share/dns/root.key
+On-NoSignature       reject
+On-BadSignature      reject
+On-SignatureError    reject
+On-KeyNotFound       reject
 
 EOF
     cat <<EOF >> /etc/postfix/main-new.cf
@@ -319,6 +323,8 @@ non_smtpd_milters = inet:localhost:8891
 
 EOF
   fi
+  service opendkim restart
+
   #if [ -d /etc/postfix/additional/opendkim ]; then
   #  echo "Enabling DKIM..."
   #  dkim-helper.sh
