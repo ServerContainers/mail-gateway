@@ -305,7 +305,8 @@ SubDomains           yes
 OversignHeaders      From
 UserID               opendkim
 UMask                007
-Socket               inet:8891@localhost
+#Socket               inet:8891@localhost
+Socket               local:/run/opendkim/opendkim.sock
 PidFile              /run/opendkim/opendkim.pid
 TrustAnchorFile      /usr/share/dns/root.key
 On-NoSignature       reject
