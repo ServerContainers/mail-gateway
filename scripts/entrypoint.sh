@@ -180,7 +180,6 @@ submission inet n       -       n       -       -       smtpd
  -o smtpd_helo_restrictions=
  -o smtpd_sender_restrictions=
  -o smtpd_recipient_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
- -o smtpd_relay_restrictions=permit_mynetworks,reject_unauth_destination
  #-o milter_macro_daemon_name=ORIGINATING
  -o header_checks=regexp:/etc/postfix/additional/header_checks
  #-o mime_header_checks=regexp:/etc/postfix/additional/header_checks
@@ -237,6 +236,7 @@ smtp-amavis  unix    -    -    n    -    2    smtp
  -o smtpd_helo_restrictions=
  -o smtpd_sender_restrictions=
  -o smtpd_recipient_restrictions=permit_mynetworks,reject
+ -o smtpd_relay_restrictions=permit_mynetworks,reject_unauth_destination
  -o mynetworks=127.0.0.0/8
  -o strict_rfc821_envelopes=yes
  -o smtpd_error_sleep_time=0
