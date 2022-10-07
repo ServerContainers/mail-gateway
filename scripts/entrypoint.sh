@@ -260,7 +260,7 @@ EOF
      echo '    \%bypass_spam_checks, \@bypass_spam_checks_acl, \$bypass_spam_checks_re);' >> /etc/amavis/conf.d/15-content_filter_mode
     fi
 
-    echo "$allowed_added_header_fields{lc('Received')} = 0;" >> /etc/amavis/conf.d/15-content_filter_mode
+    echo "\$allowed_added_header_fields{lc('Received')} = 0;" >> /etc/amavis/conf.d/15-content_filter_mode
     echo '1;  # ensure a defined return' >> /etc/amavis/conf.d/15-content_filter_mode
 
     echo "AMAVIS - modify settings"
