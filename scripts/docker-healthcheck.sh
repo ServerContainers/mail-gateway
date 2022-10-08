@@ -6,6 +6,7 @@ if [ $? -ne 0 ]; then
   postfix reload
   rm -rf /tmp/tls 2> /dev/null
   cp -a /etc/postfix/tls /tmp/tls
+  echo "SSL certificates updated, postfix reloaded..."
 fi
 
 [[ $(ps aux | grep '[r]unsvdir\|[r]syslogd\|[s]bin/master' | wc -l) -ge '3' ]]
