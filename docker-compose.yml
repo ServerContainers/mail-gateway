@@ -19,9 +19,9 @@ services:
       - TZ=${TZ}
       - MAIL_FQDN=${MAIL_FQDN}
       - POSTMASTER_ADDRESS=${POSTMASTER_ADDRESS}
-      - POSTFIX_SSL_CERT_FILENAME=cert.pem
-      - POSTFIX_SSL_KEY_FILENAME=key.pem
-      - POSTFIX_SSL_CACERT_FILENAME=ca.crt
+      - LETS_ENCRYPT_CERT_FILENAME=cert.pem
+      - LETS_ENCRYPT_KEY_FILENAME=key.pem
+      - INTERNAL_CA_CERT_FILENAME=ca.crt
       - CERT_AUTH_METHOD=fingerprint
       - DISABLE_VIRUS_CHECKS=true
       #- DISABLE_AMAVIS=true
