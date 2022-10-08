@@ -7,13 +7,20 @@ rm -f /run/amavis/amavisd.pid 2> /dev/null > /dev/null
 INITIALIZED="/.initialized"
 if [ ! -f "$INITIALIZED" ]; then
 
+  SSL_CERT_FILENAME=cert.pem
+  if [ ! -z ${LETS_ENCRYPT_CERT_FILENAME+x} ]; then
+    SSL_CERT_FILENAME=$LETS_ENCRYPT_CERT_FILENAME
+  fi
+  SSL_KEY_FILENAME=key.pem
+  if [ ! -z ${LETS_ENCRYPT_KEY_FILENAME+x} ]; then
+    SSL_KEY_FILENAME=$LETS_ENCRYPT_KEY_FILENAME
+  fi
+
   if [ -z ${MAIL_FQDN+x} ] || \
      [ -z ${POSTMASTER_ADDRESS+x} ] || \
-     [ -z ${LETS_ENCRYPT_CERT_FILENAME+x} ] || \
-     [ -z ${LETS_ENCRYPT_KEY_FILENAME+x} ] || \
      [ -z ${CERT_AUTH_METHOD+x} ] || \
-     [ ! -f /etc/postfix/tls/$LETS_ENCRYPT_CERT_FILENAME ] || \
-     [ ! -f /etc/postfix/tls/$LETS_ENCRYPT_KEY_FILENAME ]; then
+     [ ! -f /etc/postfix/tls/$SSL_CERT_FILENAME ] || \
+     [ ! -f /etc/postfix/tls/$SSL_KEY_FILENAME ]; then
     echo "Missing required environment variables or certificates, exiting..."
     exit 1
   fi
@@ -148,8 +155,8 @@ smtp_sasl_password_maps = hash:/etc/postfix/additional/sasl_passwd
 # Outgoing Connections #
 
 smtp_tls_security_level = may
-smtp_tls_cert_file = /etc/postfix/tls/$LETS_ENCRYPT_CERT_FILENAME
-smtp_tls_key_file = /etc/postfix/tls/$LETS_ENCRYPT_KEY_FILENAME
+smtp_tls_cert_file = /etc/postfix/tls/$SSL_CERT_FILENAME
+smtp_tls_key_file = /etc/postfix/tls/$SSL_KEY_FILENAME
 smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
 smtp_tls_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
 smtp_tls_mandatory_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
@@ -163,8 +170,8 @@ smtp_tls_loglevel = 1
 # Incoming Connections #
 
 smtpd_tls_security_level=may
-smtpd_tls_cert_file = /etc/postfix/tls/$LETS_ENCRYPT_CERT_FILENAME
-smtpd_tls_key_file = /etc/postfix/tls/$LETS_ENCRYPT_KEY_FILENAME
+smtpd_tls_cert_file = /etc/postfix/tls/$SSL_CERT_FILENAME
+smtpd_tls_key_file = /etc/postfix/tls/$SSL_KEY_FILENAME
 smtpd_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
 smtpd_tls_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
 smtpd_tls_mandatory_exclude_ciphers = aNULL, DES, RC4, MD5, 3DES
