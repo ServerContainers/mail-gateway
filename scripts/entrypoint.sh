@@ -68,6 +68,12 @@ EOF
     touch /etc/postfix/additional/header_checks
   fi
 
+  if [ ! -f /etc/postfix/additional/sasl_passwd ]; then
+    echo "No forward relay hosts credentials file. Creating empty file..."
+    touch /etc/postfix/additional/sasl_passwd
+  fi
+  postmap /etc/postfix/additional/sasl_passwd
+
   dh1024_file=/etc/postfix/dh1024.pem
   dh512_file=/etc/postfix/dh512.pem
 
@@ -130,6 +136,12 @@ smtpd_recipient_restrictions =
 
 smtpd_relay_restrictions = 
     reject_unauth_destination
+
+##### Outgoing Relay Settings #####
+
+smtp_sasl_auth_enable = yes
+smtp_sasl_security_options = noanonymous
+smtp_sasl_password_maps = hash:/etc/postfix/additional/sasl_passwd
 
 ##### TLS Settings ######
 
