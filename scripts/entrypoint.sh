@@ -325,9 +325,6 @@ EOF
   mv /etc/postfix/main-new.cf /etc/postfix/main.cf
   mv /etc/postfix/master-new.cf /etc/postfix/master.cf
 
-  # Update system certificate store
-  update-ca-certificates
-
   touch "$INITIALIZED"
 
   # RUNIT
