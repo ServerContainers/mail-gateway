@@ -1,19 +1,31 @@
-version: '3.3'
-
+version: '3.5'
 services:
 
   mail-gateway:
     build: .
-    image: servercontainers/mail-gateway
-    restart: always
-    environment:
-      MAIL_FQDN: mail-security-scanner-gateway
-      RELAYHOST: mail02.internal.tld:25
+    image: hshq/mail-gateway:v2
+    container_name: mail-gateway
+    restart: unless-stopped
+    networks:
+      - mail
+    ports:
+      - 25:25
+      - 587:587
     volumes:
       - ./tls:/etc/postfix/tls:ro
       - ./additional:/etc/postfix/additional
-    networks:
-      - mail
+      #- ./tls/ca.crt:/usr/local/share/ca-certificates/ca.crt:ro
+    environment:
+      - TZ=${TZ}
+      - MAIL_FQDN=${MAIL_FQDN}
+      - POSTMASTER_ADDRESS=${POSTMASTER_ADDRESS}
+      - LETS_ENCRYPT_CERT_FILENAME=cert.pem
+      - LETS_ENCRYPT_KEY_FILENAME=key.pem
+      - INTERNAL_CA_CERT_FILENAME=ca.crt
+      - CERT_AUTH_METHOD=fingerprint
+      - DISABLE_VIRUS_CHECKS=true
+      #- DISABLE_AMAVIS=true
+      #- DISABLE_SPAM_CHECKS=true
 
 networks:
   mail:

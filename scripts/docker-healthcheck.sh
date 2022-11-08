@@ -1,11 +1,12 @@
 #!/bin/bash
-diff /etc/postfix/tls /tmp/tls || exit 2
 
-# in 3 days
-openssl x509 -checkend $(( 24*3600*3 )) -noout -in /etc/postfix/tls/bundle.crt
+# Check for changes to certificates, reload postfix if different.
+diff /etc/postfix/tls /tmp/tls
 if [ $? -ne 0 ]; then
-  echo 'bad - certificate expires within 3 days'
-  exit 3
+  postfix reload
+  rm -rf /tmp/tls 2> /dev/null
+  cp -a /etc/postfix/tls /tmp/tls
+  echo "SSL certificates updated, postfix reloaded..."
 fi
 
 [[ $(ps aux | grep '[r]unsvdir\|[r]syslogd\|[s]bin/master' | wc -l) -ge '3' ]]
