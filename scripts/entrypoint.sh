@@ -221,7 +221,7 @@ EOF
     postmap /etc/postfix/tls/relay_clientcerts
     cat <<EOF >> /etc/postfix/master-new.cf
  -o smtpd_recipient_restrictions=permit_tls_clientcerts,reject
- -o smtpd_relay_restrictions=permit_tls_clientcerts,reject
+ -o smtpd_relay_restrictions=permit_tls_clientcerts,permit_mynetworks,reject
  -o relay_clientcerts=hash:/etc/postfix/tls/relay_clientcerts
 
 EOF
