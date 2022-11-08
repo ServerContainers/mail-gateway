@@ -47,6 +47,11 @@ if [ ! -f "$INITIALIZED" ]; then
     QUEUE_LIFETIME_MAX=$POSTFIX_QUEUE_LIFETIME_MAX
   fi
 
+  mynetworks="127.0.0.0/8"
+  if [ ! -z ${MAIL_RELAYNETS+x} ]; then
+    mynetworks="127.0.0.0/8,$MAIL_RELAYNETS"
+  fi
+
   if [ ! -f /etc/postfix/additional/transport ]; then
     echo "Transport map is empty, no emails will be relayed. Creating empty file..."
     touch /etc/postfix/additional/transport
@@ -110,7 +115,7 @@ inet_interfaces = all
 inet_protocols = all
 mydestination = 
 relayhost = 
-mynetworks = $MYNETWORKS
+mynetworks = $mynetworks
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
 local_recipient_maps = 
@@ -142,6 +147,7 @@ smtpd_recipient_restrictions =
     reject_unauth_pipelining
 
 smtpd_relay_restrictions = 
+    permit_mynetworks,
     reject_unauth_destination
 
 ##### Outgoing Relay Settings #####
@@ -210,7 +216,7 @@ EOF
     fi
     cat <<EOF >> /etc/postfix/master-new.cf
  -o smtpd_recipient_restrictions=permit_tls_all_clientcerts,reject
- -o smtpd_relay_restrictions=permit_tls_all_clientcerts,permit_mynetworks,reject
+ -o smtpd_relay_restrictions=permit_tls_all_clientcerts,reject
 
 EOF
   elif [ "$CERT_AUTH_METHOD" = "fingerprint" ]; then
@@ -221,7 +227,7 @@ EOF
     postmap /etc/postfix/tls/relay_clientcerts
     cat <<EOF >> /etc/postfix/master-new.cf
  -o smtpd_recipient_restrictions=permit_tls_clientcerts,reject
- -o smtpd_relay_restrictions=permit_tls_clientcerts,permit_mynetworks,reject
+ -o smtpd_relay_restrictions=permit_tls_clientcerts,reject
  -o relay_clientcerts=hash:/etc/postfix/tls/relay_clientcerts
 
 EOF
