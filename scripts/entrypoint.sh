@@ -210,7 +210,7 @@ EOF
     fi
     cat <<EOF >> /etc/postfix/master-new.cf
  -o smtpd_recipient_restrictions=permit_tls_all_clientcerts,reject
- -o smtpd_relay_restrictions=permit_tls_all_clientcerts,reject
+ -o smtpd_relay_restrictions=permit_tls_all_clientcerts,permit_mynetworks,reject
 
 EOF
   elif [ "$CERT_AUTH_METHOD" = "fingerprint" ]; then
