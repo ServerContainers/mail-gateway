@@ -3,7 +3,7 @@
 cat <<EOF
 ################################################################################
 
-Welcome to the servercontainers/minimail
+Welcome to the servercontainers/mail-gateway
 
 ################################################################################
 
@@ -22,7 +22,7 @@ build the containers yourself.
 
 You'll find this container sourcecode here:
 
-    https://github.com/ServerContainers/minimail
+    https://github.com/ServerContainers/mail-gateway
 
 The container repos will be updated regularly.
 
