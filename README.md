@@ -1,18 +1,36 @@
-# Docker Mail Gateway Postfix (servercontainers/mail-gateway)
+# Docker Mail Gateway Postfix - build yourself container
 _maintained by ServerContainers_
 
+_currently tested on: x86_64, arm64, arm_
 
-## Versioning
+## IMPORTANT!
+
+In March 2023 - Docker informed me that they are going to remove my 
+organizations `servercontainers` and `desktopcontainers` unless 
+I'm upgrading to a pro plan.
+
+I'm not going to do that. It's more of a professionally done hobby then a
+professional job I'm earning money with.
+
+In order to avoid bad actors taking over my org. names and publishing potenial
+backdoored containers, I'd recommend to switch over clone my github repos and
+build the containers yourself.
+
+## Build & Variants
+
+You can specify `DOCKER_REGISTRY` environment variable (for example `my.registry.tld`)
+and use the build script to build the main container and it's variants for _x86_64, arm64 and arm_
 
 You'll find all images tagged like `d11.2-p3.5.6-1_b1` which means `d<debian version>-p<postfix version (with some esacped chars)>`.
 This way you can pin your installation/configuration to a certian version. or easily roll back if you experience any problems
 (don't forget to open a issue in that case ;D).
 
-The `latest` version will be updated/released after I managed to test a new pinned version in my production environment.
-This way I can easily find and fix bugs without affecting any users. It will result in a way more stable container.
+To build a `latest` tag run `./build.sh release`
 
 ## Changelogs
 
+* 2023-03-18
+    * switched from docker hub to a build-yourself container
 * 2022-01-08
     * new build script
     * version tagging
@@ -29,7 +47,7 @@ This way I can easily find and fix bugs without affecting any users. It will res
 
 ## What is it
 
-This Dockerfile (available as ___servercontainers/mail-gateway___) gives you a Postfix Configured for the following scenarios.
+This Dockerfile (available as self-build-container) gives you a Postfix Configured for the following scenarios.
 
 - Smarthost Configuration (Outgoing Mails for trusted nodes with random IP)
     - _let your internal mailserver send mails through this container encrypted and authenticated via ssl client authentication_
@@ -47,10 +65,6 @@ This Dockerfile (available as ___servercontainers/mail-gateway___) gives you a P
 For Configuration of the Server you use environment Variables and volume files.
 
 It's based on the [debian:bullseye](https://registry.hub.docker.com/_/debian/) Image
-
-View in Docker Hub [servercontainers/mail-gateway](https://hub.docker.com/r/servercontainers/mail-gateway)
-
-View in GitHub [ServerContainers/mail-gateway](https://github.com/ServerContainers/mail-gateway)
 
 ### What it's not
 

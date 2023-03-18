@@ -1,5 +1,33 @@
 #!/bin/bash
 
+cat <<EOF
+################################################################################
+
+Welcome to the servercontainers/minimail
+
+################################################################################
+
+# IMPORTANT!
+
+In March 2023 - Docker informed me that they are going to remove my 
+organizations `servercontainers` and `desktopcontainers` unless 
+I'm upgrading to a pro plan.
+
+I'm not going to do that. It's more of a professionally done hobby then a
+professional job I'm earning money with.
+
+In order to avoid bad actors taking over my org. names and publishing potenial
+backdoored containers, I'd recommend to switch over clone my github repos and
+build the containers yourself.
+
+You'll find this container sourcecode here:
+
+    https://github.com/ServerContainers/minimail
+
+The container repos will be updated regularly.
+
+EOF
+
 #
 # can be done on every start...
 #

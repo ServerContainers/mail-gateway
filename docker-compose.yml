@@ -4,7 +4,7 @@ services:
 
   mail-gateway:
     build: .
-    image: servercontainers/mail-gateway
+    image: mail-gateway
     restart: always
     environment:
       MAIL_FQDN: mail-security-scanner-gateway
