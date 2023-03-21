@@ -1,7 +1,5 @@
-# Docker Mail Gateway Postfix - build yourself container
+# Docker Mail Gateway Postfix - (ghcr.io/servercontainers/mail-gateway) [x86 + arm]
 _maintained by ServerContainers_
-
-_currently tested on: x86_64, arm64, arm_
 
 ## IMPORTANT!
 
@@ -13,8 +11,7 @@ I'm not going to do that. It's more of a professionally done hobby then a
 professional job I'm earning money with.
 
 In order to avoid bad actors taking over my org. names and publishing potenial
-backdoored containers, I'd recommend to switch over clone my github repos and
-build the containers yourself.
+backdoored containers, I'd recommend to switch over to my new github registry: `ghcr.io/servercontainers`.
 
 ## Build & Variants
 
@@ -29,6 +26,9 @@ To build a `latest` tag run `./build.sh release`
 
 ## Changelogs
 
+* 2023-03-20
+    * github action to build container
+    * implemented ghcr.io as new registry
 * 2023-03-18
     * switched from docker hub to a build-yourself container
 * 2022-01-08
@@ -65,6 +65,13 @@ This Dockerfile (available as self-build-container) gives you a Postfix Configur
 For Configuration of the Server you use environment Variables and volume files.
 
 It's based on the [debian:bullseye](https://registry.hub.docker.com/_/debian/) Image
+
+View in GitHub Registry [ghcr.io/servercontainers/mail-gateway](https://ghcr.io/servercontainers/mail-gateway)
+
+View in GitHub [ServerContainers/mail-gateway](https://github.com/ServerContainers/mail-gateway)
+
+_currently tested on: x86_64, arm64, arm_
+
 
 ### What it's not
 
