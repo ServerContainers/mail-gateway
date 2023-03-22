@@ -13,7 +13,7 @@ professional job I'm earning money with.
 In order to avoid bad actors taking over my org. names and publishing potenial
 backdoored containers, I'd recommend to switch over to my new github registry: `ghcr.io/servercontainers`.
 
-## Build & Variants
+## Build & Versions
 
 You can specify `DOCKER_REGISTRY` environment variable (for example `my.registry.tld`)
 and use the build script to build the main container and it's variants for _x86_64, arm64 and arm_
