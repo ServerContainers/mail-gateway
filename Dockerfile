@@ -8,6 +8,7 @@ RUN apt-get -q -y update \
                           telnet \
                           net-tools \
                           postfix \
+                          libsasl2-modules \
                           rsyslog \
                           clamav clamav-daemon amavisd-new spamassassin razor pyzor \
                           arj bzip2 cabextract cpio file gzip nomarch pax unzip zip \

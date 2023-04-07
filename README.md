@@ -26,6 +26,8 @@ To build a `latest` tag run `./build.sh release`
 
 ## Changelogs
 
+* 2023-04-07
+    * added package `libsasl2-modules` to fix broken sasl2
 * 2023-03-20
     * github action to build container
     * implemented ghcr.io as new registry
