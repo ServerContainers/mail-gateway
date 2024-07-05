@@ -66,13 +66,29 @@ jobs:
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
-      - name: Build and push Docker image
-        id: build-and-push
+      - name: Build and push Docker image with tag
+        if: ${{ !endsWith(steps.docker_version_tag.outputs.tag, 'latest') }}
+        id: build-and-push-tagged
         uses: docker/build-push-action@v5
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.docker_version_tag.outputs.tag }}
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build and push Docker image with Buildx (don't push on PR)
+      # https://github.com/docker/build-push-action
+      - name: Build and push Docker image as latest
+        if: ${{ !endsWith(steps.docker_version_tag.outputs.tag, 'latest') }}
+        id: build-and-push-latest
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: latest
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
@@ -84,7 +100,7 @@ jobs:
       # transparency data even for private images, pass --force to cosign below.
       # https://github.com/sigstore/cosign
       - name: Sign the published Docker image
-        if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ github.event_name != 'pull_request' && !endsWith(steps.docker_version_tag.outputs.tag, 'latest') }}
         env:
           COSIGN_EXPERIMENTAL: "true"
         # This step uses the identity token to provision an ephemeral certificate
