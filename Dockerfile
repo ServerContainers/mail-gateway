@@ -29,15 +29,6 @@ RUN apt-get -q -y update \
  && adduser clamav amavis
 
 #
-# Postfix
-#
-
-RUN openssl dhparam -out /etc/postfix/dh1024.pem 1024 \
- && postconf -e 'smtpd_tls_dh1024_param_file=/etc/postfix/dh1024.pem' \
- && openssl dhparam -out /etc/postfix/dh512.pem 512 \
- && postconf -e 'smtpd_tls_dh512_param_file=/etc/postfix/dh512.pem'
-
-#
 # ClamAV
 #
 
