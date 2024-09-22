@@ -322,3 +322,4 @@ Please note, that the Common Name (CN) is important and should be the FQDN to th
     postconf -e smtpd_tls_ask_ccert=yes
     postconf -e smtpd_tls_CAfile=/etc/postfix/tls/rootCA.crt
     postconf -e smtpd_recipient_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
+
