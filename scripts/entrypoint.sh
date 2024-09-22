@@ -246,16 +246,6 @@ EOF
     postconf -e smtpd_recipient_restrictions=permit_mynetworks,permit_tls_all_clientcerts,reject_unauth_destination
   fi
 
-  if [ -f /etc/postfix/tls/dh1024.pem ]; then
-    echo ">> using dh1024.pem provided in volume"
-    postconf -e 'smtpd_tls_dh1024_param_file=/etc/postfix/tls/dh1024.pem'
-  fi
-
-  if [ -f /etc/postfix/tls/dh512.pem ]; then
-    echo ">> using dh512.pem provided in volume"
-    postconf -e 'smtpd_tls_dh512_param_file=/etc/postfix/tls/dh512.pem'
-  fi
-
   if [ ! -z ${POSTFIX_QUEUE_LIFETIME_BOUNCE+x} ]; then
     echo ">> POSTFIX set bounce_queue_lifetime = $POSTFIX_QUEUE_LIFETIME_BOUNCE"
     postconf -e "bounce_queue_lifetime=$POSTFIX_QUEUE_LIFETIME_BOUNCE"

@@ -26,6 +26,8 @@ To build a `latest` tag run `./build.sh release`
 
 ## Changelogs
 
+* 2024-09-22
+    * config/tls fixes - removed dh - now done by postfix automatically
 * 2023-04-07
     * added package `libsasl2-modules` to fix broken sasl2
 * 2023-03-20
@@ -175,8 +177,6 @@ _for example: to set_ ___mynetworks_style = subnet___ _just add a environment va
 
 - /etc/postfix/tls
     - this is where the container looks for:
-        - dh1024.pem (to overwrite the one generated at container build)
-        - dh512.pem (to overwrite the one generated at container build)
         - rootCA.crt (to check valid client certificates against)
         - client.crt (outgoing SSL Client cert)
         - client.key (outgoing SSL Client key)
