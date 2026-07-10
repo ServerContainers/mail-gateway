@@ -12,6 +12,7 @@ RUN apt-get -q -y update \
                           rsyslog \
                           clamav clamav-daemon amavisd-new spamassassin razor pyzor \
                           arj bzip2 cabextract cpio file gzip nomarch pax unzip zip \
+                          p7zip-full lz4 xz-utils lzop unrar-free tnef lhasa \
                           \
                           opendkim \
                           opendkim-tools \

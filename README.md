@@ -83,6 +83,21 @@ This container is not meant to be used as a mail server which stores mails and h
 Just put this container in between the outside world and your mailbox handeling mail server.
 Take a look at [ServerContainers/mail-box](https://github.com/ServerContainers/mail-box) for a mail server with mailbox/imap handling.
 
+## Archive scanning / unpackers
+
+Amavis unpacks attachments and hands the extracted content to ClamAV and
+SpamAssassin. It can only look *inside* an archive if the matching decoder /
+unpacker program is installed - otherwise the archive is passed through
+unscanned and malware hidden inside it can slip through.
+
+To close that gap the image ships the following archive unpackers (all from
+Debian _main_): `arj`, `bzip2`, `cabextract`, `cpio`, `gzip`, `nomarch`,
+`pax`, `unzip`, `zip`, `p7zip-full` (7z), `lz4`, `xz-utils` (xz/lzma),
+`lzop`, `unrar-free` (rar), `tnef` (winmail.dat / MS-TNEF) and `lhasa` (lha).
+
+This lets the scanner recurse into `.7z`, `.xz`, `.lzma`, `.lz4`, `.rar`,
+`.lzo`, `.lha` and the other supported formats instead of skipping them.
+
 ## Environment variables
 
 __OFFICIAL ENVIRONMENT VARIABLES__
