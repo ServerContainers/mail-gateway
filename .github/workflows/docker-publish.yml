@@ -81,6 +81,10 @@ jobs:
 
       - name: Extract Docker Version Tag
         id: docker_version_tag          
+        env:
+          # rebuild on code changes (push / manual run); only the nightly
+          # schedule dedups on the version tag to skip identical rebuilds
+          FORCE_REBUILD: ${{ github.event_name != 'schedule' && '1' || '' }}
         run: |
           ./get-version.sh $(echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:" | tr '[:upper:]' '[:lower:]') | sed 's/^/tag=/g' >> $GITHUB_OUTPUT
 

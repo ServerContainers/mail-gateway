@@ -6,6 +6,14 @@ export POSTFIX_VERSION=$(docker run --rm -t get-version dpkg --list postfix | gr
 [ -z "$DEBIAN_VERSION" ] && exit 1
 
 export IMGTAG=$(echo "$1""d$DEBIAN_VERSION-p$POSTFIX_VERSION")
+# FORCE_REBUILD (set by the workflow for push / manual runs) rebuilds even if
+# the versioned image already exists, so code/config changes get republished.
+# the nightly schedule leaves it unset and keeps deduping on the version tag.
+if [ -n "$FORCE_REBUILD" ]; then
+  echo "$IMGTAG"
+  exit 0
+fi
+
 export IMAGE_EXISTS=$(docker pull "$IMGTAG" 2>/dev/null >/dev/null; echo $?)
 
 # return latest, if container is already available :)
