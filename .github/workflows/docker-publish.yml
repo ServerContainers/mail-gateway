@@ -25,7 +25,17 @@ env:
 
 
 jobs:
+  # gate: don't build or publish anything unless the tests pass
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Run tests
+        run: ./test.sh
+
   build:
+    needs: test
 
     runs-on: ubuntu-latest
     permissions:
