@@ -74,7 +74,14 @@ if [ ! -f "$INITIALIZED" ]; then
   MAILDOMAIN=$(echo "$MAIL_FQDN" | cut -d'.' -f2-)
 
   echo ">> set mail host to: $MAIL_FQDN"
-  sed -i '12a\$myhostname = "'"$MAIL_FQDN"'";\' etc/amavis/conf.d/05-node_id
+  # robustly set $myhostname in amavis: uncomment/replace the documented
+  # placeholder line if present, otherwise append the setting before the
+  # trailing "1;" return. avoids relying on a hardcoded line number.
+  if grep -q '^#\$myhostname' /etc/amavis/conf.d/05-node_id; then
+    sed -i 's|^#\$myhostname = .*|$myhostname = "'"$MAIL_FQDN"'";|' /etc/amavis/conf.d/05-node_id
+  else
+    sed -i '/^1;/i $myhostname = "'"$MAIL_FQDN"'";' /etc/amavis/conf.d/05-node_id
+  fi
   echo "$MAIL_FQDN" > /etc/mailname
   echo "$MAIL_NAME" > /etc/hostname
   postconf -e "myhostname=$MAIL_FQDN"
@@ -98,7 +105,7 @@ cat <<EOF >> /etc/postfix/master.cf
 smtp-amavis  unix    -    -    n    -    2    smtp
  -o smtp_data_done_timeout=1200
  -o smtp_send_xforward_command=yes
- -o disable_dns_lookups=yes
+ -o smtp_dns_support_level=disabled
 
 127.0.0.1:10025 inet    n    -    n    -    -    smtpd
  -o content_filter=
