@@ -108,8 +108,12 @@ __OFFICIAL ENVIRONMENT VARIABLES__
 - POSTFIX_SMTPD_BANNER
     - alter the SMTPD Banner of postfix e.g. _mailserver.example.local ESMTP_
 
+- INET_PROTOCOLS
+    - which IP versions postfix listens on and uses: `all`, `ipv4` or `ipv6`
+    - _default: auto_ — `all` if the container has IPv6 (Docker network with `enable_ipv6`), otherwise `ipv4`
 - AUTO_TRUST_NETWORKS
     - add all networks this container is connected to and trust them to send mails
+    - includes IPv6 networks (as `[prefix]/len`) when the container has IPv6
     - _set to any value to enable_
 - ADDITIONAL_MYNETWORKS
     - add this specific network to the automatically trusted onces
@@ -187,6 +191,27 @@ _some characters might brake your configuration!_
     - set/edit all configurations in /etc/postfix/main.cf using the POSTFIX_RAW_CONFIG_ followed by the setting name
 
 _for example: to set_ ___mynetworks_style = subnet___ _just add a environment variable_ ___POSTFIX_RAW_CONFIG_MYNETWORKS_STYLE=subnet___
+
+
+## IPv6
+
+Postfix listens on IPv6 whenever the container has it. With
+plain Docker defaults a container is IPv4-only, and published ports reach it
+over IPv6 through `docker-proxy`, which connects to the container over IPv4 —
+so every IPv6 client shows up as the Docker network gateway (`172.x.0.1`).
+To see real IPv6 client addresses, give the network IPv6 and let Docker NAT
+IPv6 itself (`/etc/docker/daemon.json`: `"ip6tables": true`, plus
+`"experimental": true` on Docker < 27):
+
+```yaml
+networks:
+  default:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 172.19.0.0/16
+        - subnet: fd00:d0c:25::/64
+```
 
 ## Volumes
 

@@ -1,40 +1,18 @@
-#!/bin/bash
+#!/bin/sh
+# Print every network this container is directly attached to, one per line,
+# in Postfix mynetworks notation (IPv4 a.b.c.d/n, IPv6 [prefix]/n).
+# Used by AUTO_TRUST_NETWORKS.
+#
+# Connected routes are exactly the attached networks, with the host bits
+# already zeroed — no netmask arithmetic, and IPv6 works the same way.
+# Link-local and multicast IPv6 prefixes are never trusted.
 
-function getNetworkFromAddressAndNetmask {
-  IFS=. read -r i1 i2 i3 i4 <<< "$1"
-  IFS=. read -r m1 m2 m3 m4 <<< "$2"
-  printf "%d.%d.%d.%d\n" "$((i1 & m1))" "$((i2 & m2))" "$((i3 & m3))" "$((i4 & m4))"
-}
+echo "127.0.0.0/8"
+ip -4 route show 2>/dev/null \
+  | awk '$1 ~ /\// && $1 != "default" && !/ via / { print $1 }'
 
-function getCidrSuffixFromNetmask {
-    nbits=0
-    IFS=.
-    for dec in $1 ; do
-        case $dec in
-            255) let nbits+=8;;
-            254) let nbits+=7;;
-            252) let nbits+=6;;
-            248) let nbits+=5;;
-            240) let nbits+=4;;
-            224) let nbits+=3;;
-            192) let nbits+=2;;
-            128) let nbits+=1;;
-            0);;
-            *) echo "Error: $dec is not recognised"; exit 1
-        esac
-    done
-    echo "$nbits"
-}
-
-
-IFS=$'\n'       # make newlines the only separator
-for j in $(ifconfig | grep inet | tr ' ' '\n' | grep 'Mask\|add' | tr '\n' ' ' | sed 's/addr/\naddr/g' | grep . | sed 's/[^0-9. ]//g')
-do
-  ADDR=$(echo "$j" | cut -d' ' -f1)
-  MASK=$(echo "$j" | cut -d' ' -f2)
-
-  NETWORK=$(getNetworkFromAddressAndNetmask "$ADDR" "$MASK")
-  CIDR=$(getCidrSuffixFromNetmask "$MASK")
-
-  echo "$NETWORK/$CIDR"
-done
+grep -q . /proc/net/if_inet6 2>/dev/null || exit 0
+echo "[::1]/128"
+ip -6 route show 2>/dev/null \
+  | awk '$1 ~ /\// && $1 != "default" && !/ via / && $1 !~ /^(fe80|ff[0-9a-f][0-9a-f]):/ {
+           split($1, p, "/"); print "[" p[1] "]/" p[2] }'
