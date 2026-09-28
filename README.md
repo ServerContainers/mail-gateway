@@ -176,6 +176,7 @@ __OFFICIAL ENVIRONMENT VARIABLES__
 
 - POSTFIX_RELAY_DOMAINS
     - specify certain domains which will be relayed (by default all mails will be forwarded)
+    - with amavis enabled these domains (and their subdomains) are also amavis' local domains, so incoming mail for them gets spam headers (`X-Spam-*`, subject tag at `AMAVIS_SA_TAG2_LEVEL_DEFLT`)
 - POSTFIX_MYDESTINATION
     - specify the domains which this mail-gateway handles (I recommend to use only POSTFIX_RELAY_DOMAINS)
 
