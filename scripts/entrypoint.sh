@@ -289,6 +289,18 @@ EOF
   if [ ! -z ${POSTFIX_RELAY_DOMAINS+x} ]; then
     echo ">> POSTFIX set relay_domains = $POSTFIX_RELAY_DOMAINS"
     postconf -e "relay_domains=$POSTFIX_RELAY_DOMAINS"
+
+    # amavis only treats a recipient as "local" (spam headers, subject tag,
+    # {RelayedInbound} instead of {RelayedOpenRelay}) if its domain is in
+    # @local_domains_acl, which Debian defaults to .$mydomain (/etc/mailname)
+    # only. The relayed domains are exactly the ones this gateway receives
+    # mail for, so make them local — with subdomains (leading dot).
+    if [ -z ${DISABLE_AMAVIS+x} ]; then
+      AMAVIS_LOCAL_DOMAINS=$(echo "$POSTFIX_RELAY_DOMAINS" | tr ', ' '\n\n' | grep . \
+        | sed 's/^\.//; s/.*/".&"/' | tr '\n' ',' | sed 's/,$//')
+      echo ">> AMAVIS set @local_domains_acl = ( \".\$mydomain\", $AMAVIS_LOCAL_DOMAINS )"
+      sed -i '/^1;/i @local_domains_acl = ( ".$mydomain", '"$AMAVIS_LOCAL_DOMAINS"' );' /etc/amavis/conf.d/50-user
+    fi
   fi
 
   if [ -d /etc/postfix/additional/opendkim ]; then
