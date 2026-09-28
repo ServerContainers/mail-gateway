@@ -25,7 +25,25 @@ EOF
 # cleanup/remove amavis pidfile
 rm -f /run/amavis/amavisd.pid 2> /dev/null > /dev/null
 
+##
+# POSTFIX IP PROTOCOLS
+##
+
+# Listen on IPv6 too whenever the container has it (Docker network with
+# enable_ipv6). IPv4-only containers stay on ipv4 — Postfix would otherwise
+# warn about missing IPv6 support on every start. INET_PROTOCOLS overrides.
+if [ -z ${INET_PROTOCOLS+x} ]; then
+  if grep -q . /proc/net/if_inet6 2>/dev/null; then
+    INET_PROTOCOLS=all
+  else
+    INET_PROTOCOLS=ipv4
+  fi
+fi
+echo ">> postfix inet_protocols: $INET_PROTOCOLS"
+postconf -e "inet_protocols=$INET_PROTOCOLS"
+
 AVAILABLE_NETWORKS="127.0.0.0/8"
+[ "$INET_PROTOCOLS" = "ipv4" ] || AVAILABLE_NETWORKS="$AVAILABLE_NETWORKS,[::1]/128"
 if [ ! -z ${AUTO_TRUST_NETWORKS+x} ]; then
   AVAILABLE_NETWORKS=$(list-available-networks.sh | tr '\n' ',' | sed 's/,$//g')
   echo ">> trust all available networks: $AVAILABLE_NETWORKS"

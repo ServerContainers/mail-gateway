@@ -7,6 +7,7 @@ RUN apt-get -q -y update \
  && apt-get -q -y install --no-install-recommends runit \
                           telnet \
                           net-tools \
+                          iproute2 \
                           postfix \
                           libsasl2-modules \
                           rsyslog \
