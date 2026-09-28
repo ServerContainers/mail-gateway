@@ -361,6 +361,18 @@ rm -rf /tmp/tls 2> /dev/null
 cp -a /etc/postfix/tls /tmp/tls
 
 ##
+# DKIM key permissions — every start
+##
+# opendkim refuses keys that group/others can read ("key data is not secure")
+# and then tempfails every message of that domain (4.7.1). The keys live on a
+# volume, so their mode is whatever the host left; enforce it on each start
+# (after init, so freshly generated keys are covered too).
+if [ -d /etc/postfix/additional/opendkim/keys ]; then
+  echo ">> DKIM - enforce key permissions (default.private -> 0600)"
+  find /etc/postfix/additional/opendkim/keys -name default.private ! -perm 0600 -print -exec chmod 0600 {} +
+fi
+
+##
 # CMD
 ##
 echo ">> CMD: exec docker CMD"
